@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>math2022</title>
+        <link href="3forty.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h2>MATHEMATHICS2022</h2>
+        <button onclick="toggleDarkMode()">Toggle Dark Mode</button>
+        <br>
+        <label for="timeInput">Set Time (minutes):</label>
+        <input type="number" id="timeInput" min="1" max="120" value="10">
+        <button onclick="startExam()">Start Exam</button>
+        <p class="timer" id="timer"></p>
+        <div class="progress-bar"><div class="progress" id="progress"></div></div>
+        <form id="quizForm" style="display:none;">
+            <div id="questions"></div>
+            <button type="button" onclick="checkAnswers()">Submit</button>
+        </form>
+        <p class="result" id="result"></p>
+        <h3>Leaderboard</h3>
+        <ul id="leaderboard"></ul>
+        <div id="reviewSection">
+            <h3>Review Answers</h3>
+            <div id="reviewContent"></div>
+        </div>
+    </div>
+
+    <script>
+
+ let timerInterval;
+        let timeLeft;
+        let correctSound = new Audio('https://www.fesliyanstudios.com/play-mp3/4386');
+        let incorrectSound = new Audio('https://www.fesliyanstudios.com/play-mp3/4387');
+        let leaderboard = JSON.parse(localStorage.getItem("leaderboard")) || [];
+        const questions = [
+
+            { q: "Find n if 31410 – 2567 = 340n", options: ["85", "84", "94", "13"], answer: "7", explanation: "31410 - 2567 = 340,  FIRTLY 31410 - 2567 =28843, THEN DIVIDE BOTH SIDE BY THE QOEFFICIENT OF (N) WHICH IS 340, 28843/340 = 340N/340, THEN N = 84.832 APPROCIMATE TO 85 " },
+            { q: "What is the difference between 1.867551 correct to four significant figures and 1.867551 correct to four decimal places?", options: ["5 x 10-3", "4 x 10-4", "5 x 10-4", "10 x 10-3"], answer: "4 x 10-4", explanation: " " },
+            { q: "In an examination, all the candidates offered at least one of English and French, if 52% offered French and 65% offered English, what percentage offered French only?", options: ["17%", "35%", "48%", "45%"], answer: "35%" },
+            { q: "Find the range of values of x satisfying the inequalities 2x – 5 < 7 and 25 + 2x > 15", options: ["5 < x < 6", "-5 < x < 6"," -6 < x < 5", " -6 < x < -5"], answer: "-5 < x < 6" },
+            { q: "If the 8th term of an A.P is three times the second term and the sum of the first three terms is 18, find the first term of the A.P.", options: ["4", "2", "8", "3"], answer: "4" },
+            { q: "A chord of a circle of radius 10cm is drawn 8cm from the centre of the circle. Find the length of the chord.", options: ["6cm", "2√41cm", "12cm", "√41cm"], answer: "12cm" },
+            { q: "Find the equation of the line which passes through (-2, 1) and is perpendicular to the line 4x – 2y + 1 = 0.", options: ["2y – x – 4 = 0", "2y + x = 0", "2y – x = 0", "y – 2x – 5 = 0"], answer: "2y + x = 0" },
+            { q: "If a line is parallel to the line 2y – rx + 4 = 0 and perpendicular to the line 4y+ x – 28 = 0, then the value of r is", options: ["4", "8", "-8", "6"], answer: "-8" },
+            { q: "The first derivative of y = (2 + 3x)4 at x = -1 is", options: ["12", "-12", "4", " -4"], answer: "-12" },
+            { q: "The minimum value of (x) = x2 – 4x + 5 in the interval [1,-1] is", options: ["-2", "10", "4", "5"], answer: "-2" },
+            { q: "A company is to select three different handset phones from five different types of Nokia brand and two different types of Samsung brand. In how many ways can the company choose the handsets, so as to include at least one Samsung brand?", options: ["15", "25", "35", "45"], answer: "25" },
+            { q: "The average of three numbers is 325. If the sum of two of the numbers is 1314, find the third number in base 6.", options: ["436", "346", "236", "326"], answer: "346" },
+            { q: "Three times the second term plus the seventh term of an AP is equal to the twelfth term. Find the relationship between the first term a and the common difference d.", options: ["3a – 2d = 0", "3a + 2d = 0", "3a + d = 0", "3a – d= 0"], answer: "3a – 2d = 0" },
+            { q: "ROkey, Akpan and Toye agreed to set up a mini-business. Okey contributed ⅓ of the capital, Akpan ⅙, and Toye ₦8,400. What is the capital?", options: ["₦7,200", "₦25,200", "₦16,800", "₦8,400"], answer: "₦16,800" },
+            { q: "Factorise 81a3 – 24b6.", options: ["2(3a – 2b2)(3a2 + 6ab2 + 2b4)", "3(3a – 2b2)(9a2 + 6ab2 + 4b4)", "2(2a2– 3b2)(4a2 + 3ab2 + 2b2)", "9(9a – 2b3)(9a2 + 6ab2 + 2b4)"], answer: "3(3a – 2b2)(9a2 + 6ab2 + 4b4)" },
+            { q: "Given that log2 = 0.69, log3 = 1.10 and log7 = 1.90 all to a fixed base, find log10.5 to the same base, without using tables.", options: ["3", "3.69", "2.31 ", "2.41"], answer: "2.31 " },
+            { q: "Solve the simultaneous linear equations: 2x + 5y = 11 and 7x + 4y = -2.", options: ["x = 2, y = 3", "x = -2, y = 3", "x = 3, y = -2", "x = -4, y = 81"], answer: "x = -2, y = 3" },
+            { q: "In a class of 120 students, 18 of them scored an A grade in Mathematics. If the section representing the A grade students on a pie chart has an x° as the centre of the circle, what is x°?", options: ["10", "20", "30", "40"], answer: "40" },
+            { q: "At what real value of x do the curves whose equations are y = x3 + x and y = x2 + 1 intersect?", options: ["-2", "2", "1", "-1"], answer: "1" },
+            { q: "If a = u2 – 3v2 and b = 2uv + v2, evaluate (2a – b)(a – b2) when u = 1 and v = -1.", options: ["11", "15", "27", "9"], answer: "9" },
+            { q: "The nth term of a sequence is (-1)n-1(2)n+1, find the sum of the 2nd and 4th terms.", options: ["40", "-40", " -8", "-32"], answer: "-40" },
+            { q: "A binary operation ⊗ is defined over a set of real numbers by x ⊗ y = xy + x + y.Find 3 ⊗ (-⅔).", options: ["-⅔?", "-1", "2", "⅓"], answer: "⅓" },
+            { q: "ENACTUS has 7 different posters to be hung in her office, kitchen and entrance. Assuming she has plans to place, at least, a poster in each of the 3 locations, how many choices does she have?", options: [" 210", "49", "170", "21"], answer: "210" },
+ 
+            { q: "If the interior angles of a hexagon are 107°, 2x°, 150°, 95°, (2x – 15)° and 123o. Find x.", options: ["80", "110", "90", "50"], answer: "90" },
+            { q: "An arc of a circle subtends an angle 70o at the centre. If the radius of the circle is 6 cm, calculate the area of the sector subtended by the given angle.", options: ["22 cm2", "44 cm2", "66 cm2", "88 cm2"], answer: "22 cm2" },
+            { q: "If sec2θ + tan2θ = 3, then the angle θ is equal to", options: ["30o", "45o", "60o", "90o"], answer: "45o" },
+            { q: "On a pie chart, there are four sectors of which three angles are 45°, 90° and 135°. If the smallest sector represents ₦28,00, how much is the largest sector?", options: ["₦6,000", "₦84,000", "₦48,000", "₦42,000"], answer: "₦84,000" },
+            { q: "Find the number of committees of three that can be formed consisting of two men and one woman from four men and three women", options: ["3", "6", "18", "24"], answer: "18" },
+            { q: "A bag contains 5 black balls and 3 red balls. Two balls are picked at random without replacement. What is the probability that a black and red ball are picked?", options: ["15/28", "13/28", "5/14", "3/14"], answer: "15/28" },
+            { q: "If x is the sum of the prime numbers between 1 and 6, and y the HCF of 6, 9, 15, find the product of x and y.", options: ["27", "30", "33 ", "90%"], answer: "30" },
+            { q: "A 5.0g of salt was weighed by Vera as 5.1g. What is the percentage error?", options: ["20%", "2%", "1%", "0.2%"], answer: "2%" }, 
+            { q: "Two brothers, John and Tim, own a store. The ratio of John’s share to Tim’s is 11:9. Later, Tim sells two-third of his share to John for ₦720.00. Find the value of the store.", options: ["₦I,080.00", "₦2,400.00", "₦3,000.00", "₦3,600.00"], answer: "₦2,400.00" },
+            { q: "Four interior angles of a pentagon are (90 – x)o, (90 + x)o, (110 – 2x)o, (110 + 2x)o. Find the fifth interior angle.", options: ["110°", "120°", "130°", "140°"], answer: "140°" },
+
+
+            { q: "If x + 1 is a factor of a + 3x + 3x2 + bx3 and the remainder when this expression is divided by x + 2, is 20, find the values of a and b.", options: ["+2 and -2", " -2 and -2", "-2 and +2", "+2 and +2"], answer: " -2 and -2" },
+            { q: "The sum of two numbers is twice their difference. If the difference of the numbers is P, find the larger of the two numbers", options: ["p/2", "3p/2", "5p/2", "3p"], answer: "3p/2" },
+            { q: "Find the tangent to the acute angle between the lines 2x + y = 3 and 3x – 2y = 5.", options: ["-7/4", "7/8", "7/4", "7/2"], answer: "7/4" },
+            { q: "What value of x makes 32(x – 1) – 8(3x – 2) = 1 a valid equation?", options: ["1", "-1", "2", "-2"], answer: "2" },
+            { q: "If the volume of a hemisphere is increasing at a steady rate of 18π m3 s−1, at what rate is its radius changing when its is 6m?", options: ["2.50 m/s", "2.00 m/s", "0.25 m/s", "0.20 m/s"], answer: "0.25 m/s" },
+            { q: "One root of the equation 27x2 + bx + 8 = 0 is known to be the square of the other. Find b.", options: ["–30", "60", "90", "36"], answer: "–30" },
+            { q: "X and Y are two events. The probability of X or Y is 0.7 and that of X is 0.4. If X and Y are independent, find the probability of Y.", options: ["0.30", "0.50", "0.57", "1.80"], answer: "0.30" },
+        ];
+        
+        function toggleDarkMode() {
+            document.body.classList.toggle("dark-mode");
+        }
+        
+        function startExam() {
+            timeLeft = parseInt(document.getElementById("timeInput").value) * 60;
+            document.getElementById("quizForm").style.display = "block";
+            document.getElementById("timeInput").style.display = "none";
+            document.querySelector("button[onclick='startExam()']").style.display = "none";
+            updateTimer();
+            timerInterval = setInterval(updateTimer, 1000);
+            loadQuestions();
+        }
+        
+        function updateTimer() {
+            let minutes = Math.floor(timeLeft / 60);
+            let seconds = timeLeft % 60;
+            document.getElementById("timer").textContent = `Time Left: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                checkAnswers();
+            }
+            timeLeft--;
+        }
+        
+        function loadQuestions() {
+            const questionContainer = document.getElementById("questions");
+            questionContainer.innerHTML = "";
+            questions.forEach((question, index) => {
+                let optionsHtml = question.options.map(option => 
+                    `<input type='radio' name='q${index}' value='${option}'> ${option}<br>`
+                ).join('');
+                questionContainer.innerHTML += `<div class='question'><p>${index + 1}. ${question.q}</p>${optionsHtml}</div>`;
+            });
+        }
+        
+        function checkAnswers() {
+            clearInterval(timerInterval);
+            let score = 0;
+            let reviewContent = "";
+            questions.forEach((question, index) => {
+                let selectedOption = document.querySelector(`input[name='q${index}']:checked`);
+                if (selectedOption) {
+                    if (selectedOption.value === question.answer) {
+                        score++;
+                    }
+                }
+                reviewContent += `<p><strong>${index + 1}. ${question.q}</strong><br>Correct Answer: ${question.answer}<br><em>Explanation: ${question.explanation}</em></p>`;
+            });
+            document.getElementById("result").textContent = `You scored ${score} out of ${questions.length}`;
+            document.getElementById("reviewContent").innerHTML = reviewContent;
+            document.getElementById("reviewSection").style.display = "block";
+            updateLeaderboard(score);
+        }
+        
+        function updateLeaderboard(score) {
+            leaderboard.push(score);
+            leaderboard.sort((a, b) => b - a);
+            localStorage.setItem("leaderboard", JSON.stringify(leaderboard.slice(0, 5)));
+            document.getElementById("leaderboard").innerHTML = leaderboard.map(s => `<li>${s}</li>`).join('');
+        }
+    </script>
+</body>
+</html>

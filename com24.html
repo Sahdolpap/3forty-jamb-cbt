@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>commerce2023</title>
+        <link href="3forty.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h2>COMMERCE2023</h2>
+        <button onclick="toggleDarkMode()">Toggle Dark Mode</button>
+        <br>
+        <label for="timeInput">Set Time (minutes):</label>
+        <input type="number" id="timeInput" min="1" max="120" value="10">
+        <button onclick="startExam()">Start Exam</button>
+        <p class="timer" id="timer"></p>
+        <div class="progress-bar"><div class="progress" id="progress"></div></div>
+        <form id="quizForm" style="display:none;">
+            <div id="questions"></div>
+            <button type="button" onclick="checkAnswers()">Submit</button>
+        </form>
+        <p class="result" id="result"></p>
+        <h3>Leaderboard</h3>
+        <ul id="leaderboard"></ul>
+        <div id="reviewSection">
+            <h3>Review Answers</h3>
+            <div id="reviewContent"></div>
+        </div>
+    </div>
+
+    <script>
+
+ let timerInterval;
+        let timeLeft;
+        let correctSound = new Audio('https://www.fesliyanstudios.com/play-mp3/4386');
+        let incorrectSound = new Audio('https://www.fesliyanstudios.com/play-mp3/4387');
+        let leaderboard = JSON.parse(localStorage.getItem("leaderboard")) || [];
+        const questions = [ 
+            { q: "The type of activity which turns processed raw materials into consumer and industrial goods is described as", options: ["Extractive", "Constructive", "Manufacturing", "Processing"], answer: "Manufacturing", explanation: "working on it" },
+            { q: "Which of the following is the most important business resource", options: ["Money", "Management", "Materials", "Manpower"], answer: "Manpower", explanation: "working on it" },
+            { q: "Rights issue means the", options: ["Issue of shares to the directors of a company", "Issue of shares by a company only to the founders of the company", "Right of shareholders to vote on any issue", "Issue of shares to shareholders on favourable terms"], answer: "Issue of shares to shareholders on favourable terms" },
+            { q: "The breaking down of a market into separate and identifiable elements each with its own special product requirements is known as a market", options: ["Differentiation", "Segmentation", "Penetration", "Identification"], answer: "Segmentation" },
+            { q: "When an industry is nationalized, the state becomes", options: ["The majority shareholder", "The only shareholder", "The only shareholder", "An equal shareholder with other individuals"], answer: "The only shareholder" },
+            { q: "The process of creating new market for a product is called", options: ["Advertising", "Marketing", "Promotion", "Consumerism"], answer: "Promotion" },
+            { q: "Sudden technology changes can have the effect of making", options: ["A company’s management style ineffective", "A company’s product obsolete", "The control mechanism difficult to implement", "The motivational factors in the company difficult to monitor"], answer: "A company’s product obsolete" },
+            { q: "Services which are of absolute monopoly can best be provided by", options: ["Private companies", "Limited liability companies", "Public companies", "Public enterprises"], answer: "Public enterprises" },
+            { q: "The main difference between nationalization and indigenization is in terms of", options: ["Shareholding", "Profit", " Technology", "Efficiency"], answer: "Profit" },
+            { q: "An aspect of the law which allows an exclusive right for a limited number of years is a", options: ["Copyright", "Trade mark", "Ratification", "Patent"], answer: "Trade mark" },
+            { q: "Departmentalization is an aspect of", options: ["Planning", "myself", "Directing", "Controlling"], answer: "Organizing" },
+            { q: "One of the obstacles to achieving the objectives of ECOWAS is", options: ["Lack of a common currency", "Colonial linkages", "Sovereignty of states", "Language differences"], answer: "Language differences" },
+            { q: "A floating policy an example of", options: ["marine insurance", "actuaries insurance", "motor insurance", "fire insurance"], answer: "audience" },
+            { q: " Which of the following industries is normally located near the source of its raw materials?", options: ["footwear", "cement factory", "textile industry", "automobile assembly"], answer: "cement factory" },
+            { q: "The merger of two companies producing the same type of products is an example of", options: ["vertical integration", "horizontal integration", "lateral merger", "an acquisition"], answer: "horizontal integration" },
+            { q: "A protection right which can be reviewed or renewed after seven (7) years is known as", options: ["trade mark", "Design", "registration name", "patent"], answer: "patent" },
+            { q: "The conversion of raw materials into finished products creates", options: ["marginal utility", "time utility", "place utility", "form utility"], answer: "form utility" },
+            { q: "The role of a wholesaler in the channel of distribution is to", options: ["buy goods directly from the manufacturers", "buy goods in large quantities and sell in small quantities", "produce goods in large quantities and sell in small quantities", "sell goods directly to the consumers"], answer: "buy goods in large quantities and sell in small quantities" },
+            { q: "Capital to a business is technically", options: ["an asset", "a profit", "an expense", "a liability"], answer: "an asset" }, 
+            { q: "A major setback of international trade is", options: ["devaluation of currency", "exchange rate appreciation", "inadequate exports", "economic sanctions"], answer: "economic sanctions" },
+            { q: "The process of dividing tasks into jobs and departments and of delegating authority is known as", options: ["Leading", "Directing", "Organizing", "Staffing"], answer: "Organizing" },
+            { q: "The market structure, business conditions and financial systems in Nigeria constitute the", options: ["political environment", "economic environment", "technological environment", "cultural environment"], answer: "economic environment" },
+            { q: "A major benefit derivable from the privatization and commercialization of public enterprises in Nigeria is", options: ["revenue generation", "information technology", "employment generation", "increase in wages"], answer: "revenue generation" },
+            { q: "The most important function of Commerce is", options: ["assisting trade through banking and insurance", "enhancing business relationships", "helping people to improve their profits", "facilitating exchanges among individuals"], answer: "facilitating exchanges among individuals" },
+            { q: "Communication enhances business activities by", options: ["Ensuring the movement of goods from producer to consumer", "keeping the good safe until they are needed", "facilitating interaction between producers and consumers", "facilitating interaction among media houses"], answer: "facilitating interaction between producers and consumers" },
+            { q: "One important requirement for the membership of the ECOWAS is", options: ["Population", "Integrity", "Independence", "landmass"], answer: "Independence" },
+            { q: "In Nigeria, the body that ensures that its members operate according to their professional ethics is the", options: ["MAN", "NAFDAC", "SON", "NPF"], answer: "SON" },
+            { q: "A floating policy an example of", options: ["marine insurance", "feasibility", "motor insurance", "fire insurance"], answer: "actuaries insurance" },
+            { q: "The media used for inter-departmental communication include", options: ["circulars, advertisement and notice boards", "memoranda, circulars and the telephone", "memoranda, advertisement and face-to-face", "memoranda, advertisement and the grape vine"], answer: "memoranda, circulars and the telephone " },
+            { q: "One advantage of a crossed cheque is that it can", options: ["only be paid into a savings account", "be cashed over the bank’s counter", "only be paid into the owner’s account", "be cashed by anyone"], answer: "only be paid into the owner’s account" },
+
+
+
+            { q: "There are some drugs that could exacerbate a particular illness.?", options: ["heal", "ameliorate", "worsen", "lengthen"], answer: "worsen" },
+            { q: "What are fixtures and fittings in a balance sheet?", options: ["Liquid capital", "Current assets", "Fixed assets", "Working capital"], answer: "Fixed assets" },
+            { q: "The different between the total payments for imports and the receipts from exports within a given period is referred to as", options: ["balance of payments", "Bebalance of tradepo", "Comparative cost advantage", "comparative advantage"], answer: "balance of payments"},
+            { q: "A sole proprietor insured his goods worth N200,000 for half the value. There was a fire incident in which goods valued at N80, 000 were destroyed. The value of compensation expected from the insurer is", options: ["N40,000", "N80,000", "N100,000", "N200,000"], answer: "N100,000" },
+            { q: "Which of the following items has the shortest effect on the consumer?", options: ["Fashion", "Innovation", "Fad", "Attribute"], answer: "Innovation" },
+            { q: "Which of the following makes other functions of business its appendages?", options: ["Production", "Marketing", "Finance", "Personnel"], answer: "Marketing" },
+            { q: "The West African Clearing House became legally operational on", options: ["1st July, 1976", "25th June, 1975", "14th March, 1975", "3rd May, 1974"], answer: "1st July, 1976" },
+            { q: "In which of the following sets of occupations can an industrial worker be found?", options: ["Extraction, commerce and construction", "Manufacturing, extraction and banking", "Construction, quarrying and insurance", "Manufacturing, extraction and construction"], answer: "Construction, quarrying and insurance" },
+
+            { q: "The merger of two companies producing the same type of products is an example of", options: ["vertical integration", "horizontal integration", "lateral merger", "an acquisition"], answer: "horizontal integration" },
+            { q: "In the case of voluntary liquidation of a business, the receiver is appointed by the", options: ["creditors", "debtors", "directors", "shareholders"], answer: "creditors" },
+        ];
+        
+        function toggleDarkMode() {
+            document.body.classList.toggle("dark-mode");
+        }
+        
+        function startExam() {
+            timeLeft = parseInt(document.getElementById("timeInput").value) * 60;
+            document.getElementById("quizForm").style.display = "block";
+            document.getElementById("timeInput").style.display = "none";
+            document.querySelector("button[onclick='startExam()']").style.display = "none";
+            updateTimer();
+            timerInterval = setInterval(updateTimer, 1000);
+            loadQuestions();
+        }
+        
+        function updateTimer() {
+            let minutes = Math.floor(timeLeft / 60);
+            let seconds = timeLeft % 60;
+            document.getElementById("timer").textContent = `Time Left: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                checkAnswers();
+            }
+            timeLeft--;
+        }
+        
+        function loadQuestions() {
+            const questionContainer = document.getElementById("questions");
+            questionContainer.innerHTML = "";
+            questions.forEach((question, index) => {
+                let optionsHtml = question.options.map(option => 
+                    `<input type='radio' name='q${index}' value='${option}'> ${option}<br>`
+                ).join('');
+                questionContainer.innerHTML += `<div class='question'><p>${index + 1}. ${question.q}</p>${optionsHtml}</div>`;
+            });
+        }
+        
+        function checkAnswers() {
+            clearInterval(timerInterval);
+            let score = 0;
+            let reviewContent = "";
+            questions.forEach((question, index) => {
+                let selectedOption = document.querySelector(`input[name='q${index}']:checked`);
+                if (selectedOption) {
+                    if (selectedOption.value === question.answer) {
+                        score++;
+                    }
+                }
+                reviewContent += `<p><strong>${index + 1}. ${question.q}</strong><br>Correct Answer: ${question.answer}<br><em>Explanation: ${question.explanation}</em></p>`;
+            });
+            document.getElementById("result").textContent = `You scored ${score} out of ${questions.length}`;
+            document.getElementById("reviewContent").innerHTML = reviewContent;
+            document.getElementById("reviewSection").style.display = "block";
+            updateLeaderboard(score);
+        }
+        
+        function updateLeaderboard(score) {
+            leaderboard.push(score);
+            leaderboard.sort((a, b) => b - a);
+            localStorage.setItem("leaderboard", JSON.stringify(leaderboard.slice(0, 5)));
+            document.getElementById("leaderboard").innerHTML = leaderboard.map(s => `<li>${s}</li>`).join('');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>goverment2023</title>
+        <link href="3forty.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h2>GOVERMENT2023</h2>
+        <button onclick="toggleDarkMode()">Toggle Dark Mode</button>
+        <br>
+        <label for="timeInput">Set Time (minutes):</label>
+        <input type="number" id="timeInput" min="1" max="120" value="10">
+        <button onclick="startExam()">Start Exam</button>
+        <p class="timer" id="timer"></p>
+        <div class="progress-bar"><div class="progress" id="progress"></div></div>
+        <form id="quizForm" style="display:none;">
+            <div id="questions"></div>
+            <button type="button" onclick="checkAnswers()">Submit</button>
+        </form>
+        <p class="result" id="result"></p>
+        <h3>Leaderboard</h3>
+        <ul id="leaderboard"></ul>
+        <div id="reviewSection">
+            <h3>Review Answers</h3>
+            <div id="reviewContent"></div>
+        </div>
+    </div>
+
+    <script>
+
+ let timerInterval;
+        let timeLeft;
+        let correctSound = new Audio('https://www.fesliyanstudios.com/play-mp3/4386');
+        let incorrectSound = new Audio('https://www.fesliyanstudios.com/play-mp3/4387');
+        let leaderboard = JSON.parse(localStorage.getItem("leaderboard")) || [];
+        const questions = [
+            { q: "In the British parliamentary system of government, the monarch can be referred to as the", options: ["Queen in parliament", "Queen and parliament", "Queen’s parliament", "Queen’s assembly"], answer: "Queen in parliament", explanation: "working on it." },
+            { q: "In Nigeria representation of state in upper house is based on", options: ["population", "ethnicity", "equity", "equality"], answer: "equality", explanation: " " },
+            { q: "Conditions for forming a federation do not include one of these", options: ["small population", "diverse ethnic group", "geographical nearness", "fear of domination"], answer: "small population" },
+            { q: "A written constitution must contain a", options: ["dialogue", "discourse", "preamble", "summary"], answer: "preamble" },
+            { q: "Voting of election in Nigeria is limited to ages", options: ["21 and above", "20 and above", "19 and above", "18 and above"], answer: "18 and above" },
+            { q: "Public opinion can function better under", options: ["democratic government", "dictatorial regime", "despotic regime", "military regime"], answer: "democratic government" },
+            { q: "In pre-colonial Nigeria, the northern emir did not use one of these as his head official", options: ["the Talakawa", "the Waziri", "the Galadima", "the Madawaki"], answer: "the Talakawa" },
+            { q: "The main motive of the imperialist penetration was to", options: ["educate", "christianize", "trade", "socialize"], answer: "trade" },
+            { q: "The 1963 constitution in Nigeria is known as the", options: ["presidential constitution", "independence constitution", "republican constitution", "federal constitution"], answer: "republican constitution" },
+            { q: "The national security commission is chairmanned by the", options: ["Chief Justice of the Federation", "President of the Federal Republic of Nigeria", "Inspector-General of Police", "President of the Senate"], answer: "President of the Federal Republic of Nigeria" },
+            { q: "Franchise means the", options: ["right of all French citizens to vote", "right of all adults to vote", "right of all aliens to vote", "right of all property owners to vote"], answer: "right of all adults to vote" },
+            { q: "Citizenship can be acquired by", options: ["nationalism", "indigenization", "naturalization", "communalism"], answer: "naturalization" },
+            { q: "In unitary system of government power is derived from", options: ["a rigid constitution", "the judiciary", "executive head of state", "one source of authority"], answer: "one source of authority" },
+            { q: " The powers allocated to the federal government in a federation are primarily contained in the", options: ["central legislative list", "exclusive legislative list", "residual legislative list", "concurrent legislative list"], answer: "exclusive legislative list" },
+            { q: "A constitution is said to be rigid if it", options: ["can only be interpreted by the military", "is written by different authors", "cannot be amended by the executive", "has cumbersome provisions for it amendment"], answer: "has cumbersome provisions for it amendment" },
+            { q: "Which of the following political parties in Nigeria formed the opposition in the House of Representatives during the First Republic?", options: ["NCNC and AG", "NCNC and UMBC", "NPC and AG", "AG and UMBC"], answer: "AG and UMBC" },
+            { q: "Red-tapism in the civil service refers to", options: ["the use of red tapes on documents", "slowness of action", "the cooperation between civil servants and politicians", "politicization of civil service"], answer: "slowness of action" },
+            { q: "One of the functions of political parties is to", options: ["make laws", "declare a state of emergency", "interpret the constitution", "aggregate interest"], answer: "aggregate interest" },
+            { q: "Immediately after the Nigeria civil war, Gowon’s regime embarked on", options: ["rejuvenation, rehabilitation and reconstruction", "reconciliation, rehabilitation and reconstruction", "rebuilding, rejoicing and regimentation", "rehabilitation, repression and renaissance"], answer: "reconciliation, rehabilitation and reconstruction" }, 
+            { q: "The Nigerian council was created by", options: ["Frederick Lugard", "Arthur Richards", "Hugh Clifford", "Benard Bourdillon"], answer: "Frederick Lugard" },
+            { q: "An electoral college system of voting is a form of", options: ["direct election", "indirect election", "secret ballot system of voting", "referendum"], answer: "indirect election" },
+            { q: "In a democracy, sovereignty resides in the", options: ["prime minister", "president", "electorate", "political parties"], answer: "electorate" },
+            { q: "The main objective of a single-party system is that it encourages", options: ["bloated bureaucracy", "dictatorship", "popular sovereignty", "representative government"], answer: "dictatorship" },
+            { q: "Which of the following is a source of a country’s constitution?", options: ["Mandamus", "Judicial injunction", "Political decisions", "Executive order"], answer: "Judicial injunction" },
+            { q: "Local government is described as grassroots government because", options: ["it is the nearest to the people", "its headquarter is located in the villages", "all the leaders are from the village", "all the local people participate in it"], answer: "it is the nearest to the people" },
+            { q: "The 1954 Lyttleton Constitution of Nigeria created the office of", options: ["Regional", "Prime minister", "Speaker of the house", "Governor"], answer: "Speaker of the house" },
+            { q: "Manifesto refers to the", options: ["national development plan of a country", "budget speech of a regime", "national", "programme of a political party"], answer: "programme of a political party" },
+            { q: "One of the methods used to oust an erring Oba in the Yoruba tradition is", options: ["impeachment", "forcing him to commit suicide", "vote of no confidence", "forcing him to go into exile"], answer: "impeachment" },
+            { q: "The French policy of assimilation in the West was essentially a form of", options: ["indirect rule", "democratic rule", "monarchial rule", "direct rule"], answer: "direct rule" },
+            { q: "The Nigerian civil war was fought because, 1966", options: ["Biafra was ripe for independence", "the Eastern Region was marginalized in Nigeria", "the Hausa-Fulani wanted to dominate Nigeria", "the Igbos were massacred in the North between September and October"], answer: "the Igbos were massacred in the North between September and October" },
+            { q: "The disadvantage of one-party system is that it", options: ["makes accountability difficult", "negates freedom of association", "emphasize political differences", "delays decision making"], answer: "negates freedom of association" },
+            { q: "Citizenship refers to the", options: ["indigenous member of a state", "social status of a person in a state", "highest position in a state", "legal status of a member of a state"], answer: "legal status of a member of a state" },
+            { q: "The main function of public opinion is to", options: ["change the policy of government", "provide direction for public policy", "support the policy of government", "indoctrinate the people"], answer: "change the policy of government"},
+            { q: "A typical form of delegated legislation is", options: ["act of parliament", "decree", "bye-law", "gazette"], answer: "bye-law" },
+            { q: "One of the major sources of constitution is", options: ["judicial precedence", "political debate", "opinion poll", "executive order"], answer: "judicial precedence" },
+            { q: "Coalition government arises when", options: ["One of the parties has a majority in the parliament", "No party has a majority in parliament", "Two or more party cooperate to pass a bill in parliament", "The ruling party is defeated in parliament"], answer: "No party has a majority in parliament" },
+            { q: "The main attribute of a state are", options: ["population, territory, government and sovereignty", "the press, the legislature, the executive and the judiciary", "federal, state and local governments", "government, the policy and the armed forces"], answer: "population, territory, government and sovereignty" },
+            { q: "Nigeria observed the principle of collective responsibility between", options: ["1993 and 1999", "1985 and 1993", "1979 and 1983", "1960 and 1966"], answer: "1960 and 1966" },
+
+            { q: "Under the presidential system of government, the legislature and the executive are", options: ["elected separately to a fixed term", "elected separately to an unfixed term", "appointed by the judiciary to a fixed term", "appointed at the same time to an unfixed term"], answer: "elected separately to a fixed term" },
+            { q: "Federalism was introduced in Nigeria under the", options: ["Richards Constitution", "JLyttleton Constitution", "Macpherson Constitution", "Independence Constitution"], answer: "Lyttleton Constitution" },
+        ];
+        
+        function toggleDarkMode() {
+            document.body.classList.toggle("dark-mode");
+        }
+        
+        function startExam() {
+            timeLeft = parseInt(document.getElementById("timeInput").value) * 60;
+            document.getElementById("quizForm").style.display = "block";
+            document.getElementById("timeInput").style.display = "none";
+            document.querySelector("button[onclick='startExam()']").style.display = "none";
+            updateTimer();
+            timerInterval = setInterval(updateTimer, 1000);
+            loadQuestions();
+        }
+        
+        function updateTimer() {
+            let minutes = Math.floor(timeLeft / 60);
+            let seconds = timeLeft % 60;
+            document.getElementById("timer").textContent = `Time Left: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                checkAnswers();
+            }
+            timeLeft--;
+        }
+        
+        function loadQuestions() {
+            const questionContainer = document.getElementById("questions");
+            questionContainer.innerHTML = "";
+            questions.forEach((question, index) => {
+                let optionsHtml = question.options.map(option => 
+                    `<input type='radio' name='q${index}' value='${option}'> ${option}<br>`
+                ).join('');
+                questionContainer.innerHTML += `<div class='question'><p>${index + 1}. ${question.q}</p>${optionsHtml}</div>`;
+            });
+        }
+        
+        function checkAnswers() {
+            clearInterval(timerInterval);
+            let score = 0;
+            let reviewContent = "";
+            questions.forEach((question, index) => {
+                let selectedOption = document.querySelector(`input[name='q${index}']:checked`);
+                if (selectedOption) {
+                    if (selectedOption.value === question.answer) {
+                        score++;
+                    }
+                }
+                reviewContent += `<p><strong>${index + 1}. ${question.q}</strong><br>Correct Answer: ${question.answer}<br><em>Explanation: ${question.explanation}</em></p>`;
+            });
+            document.getElementById("result").textContent = `You scored ${score} out of ${questions.length}`;
+            document.getElementById("reviewContent").innerHTML = reviewContent;
+            document.getElementById("reviewSection").style.display = "block";
+            updateLeaderboard(score);
+        }
+        
+        function updateLeaderboard(score) {
+            leaderboard.push(score);
+            leaderboard.sort((a, b) => b - a);
+            localStorage.setItem("leaderboard", JSON.stringify(leaderboard.slice(0, 5)));
+            document.getElementById("leaderboard").innerHTML = leaderboard.map(s => `<li>${s}</li>`).join('');
+        }
+    </script>
+</body>
+</html>

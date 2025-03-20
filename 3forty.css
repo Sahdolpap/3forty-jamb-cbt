@@ -1,0 +1,82 @@
+h1 {
+	font-family: fantasy;
+}
+heading {
+	background-color: blueviolet;
+	}
+	body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 50px;
+            transition: background 0.3s, color 0.3s;
+            background-color: seashell;
+	background-repeat: 5-repeat;
+	font-size: 15px;
+	font-family: cursive;
+	font-smooth: always;
+	font-kerning: revert-layer;
+        }
+        .dark-mode {
+            background: #121212;
+            color: white;
+        }
+        .question {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+        }
+        .result {
+            font-weight: bold;
+            margin-top: 20px;
+        }
+        .correct {
+            color: green;
+        }
+        .incorrect {
+            color: red;
+        }
+        .answer {
+            font-weight: bold;
+            color: blue;
+        }
+        .timer {
+            font-size: 20px;
+            font-weight: bold;
+            color: red;
+            margin-bottom: 20px;
+        }
+        .progress-bar {
+            width: 100%;
+            background: #ccc;
+            height: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress {
+            height: 100%;
+            width: 0;
+            background: green;
+            transition: width 0.3s;
+        }
+        button {
+            margin-top: 100px;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 50px;
+            background-color: aliceblue;
+            color: green;
+
+        }
+body.dark-mode {
+    background-color: sandybrown;
+    color: white;
+    }
+
+button:hover {
+    background-color: #34495e;
+}
+

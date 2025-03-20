@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>math2023</title>
+        <link href="3forty.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h2>MATHEMATHICS2023</h2>
+        <button onclick="toggleDarkMode()">Toggle Dark Mode</button>
+        <br>
+        <label for="timeInput">Set Time (minutes):</label>
+        <input type="number" id="timeInput" min="1" max="120" value="10">
+        <button onclick="startExam()">Start Exam</button>
+        <p class="timer" id="timer"></p>
+        <div class="progress-bar"><div class="progress" id="progress"></div></div>
+        <form id="quizForm" style="display:none;">
+            <div id="questions"></div>
+            <button type="button" onclick="checkAnswers()">Submit</button>
+        </form>
+        <p class="result" id="result"></p>
+        <h3>Leaderboard</h3>
+        <ul id="leaderboard"></ul>
+        <div id="reviewSection">
+            <h3>Review Answers</h3>
+            <div id="reviewContent"></div>
+        </div>
+    </div>
+
+    <script>
+
+ let timerInterval;
+        let timeLeft;
+        let correctSound = new Audio('https://www.fesliyanstudios.com/play-mp3/4386');
+        let incorrectSound = new Audio('https://www.fesliyanstudios.com/play-mp3/4387');
+        let leaderboard = JSON.parse(localStorage.getItem("leaderboard")) || [];
+        const questions = [
+            { q: "Find n if 31410 – 2567 = 340n", options: ["85", "84", "94", "13"], answer: "7", explanation: "31410 - 2567 = 340,  FIRTLY 31410 - 2567 =28843, THEN DIVIDE BOTH SIDE BY THE QOEFFICIENT OF (N) WHICH IS 340, 28843/340 = 340N/340, THEN N = 84.832 APPROCIMATE TO 85 " },
+            { q: "What is the difference between 1.867551 correct to four significant figures and 1.867551 correct to four decimal places?", options: ["5 x 10-3", "4 x 10-4", "5 x 10-4", "10 x 10-3"], answer: "4 x 10-4", explanation: " " },
+            { q: "In an examination, all the candidates offered at least one of English and French, if 52% offered French and 65% offered English, what percentage offered French only?", options: ["17%", "35%", "48%", "45%"], answer: "35%" },
+            { q: "Find the range of values of x satisfying the inequalities 2x – 5 < 7 and 25 + 2x > 15", options: ["5 < x < 6", "-5 < x < 6"," -6 < x < 5", " -6 < x < -5"], answer: "-5 < x < 6" },
+            { q: "If the 8th term of an A.P is three times the second term and the sum of the first three terms is 18, find the first term of the A.P.", options: ["4", "2", "8", "3"], answer: "4" },
+            { q: "A chord of a circle of radius 10cm is drawn 8cm from the centre of the circle. Find the length of the chord.", options: ["6cm", "2√41cm", "12cm", "√41cm"], answer: "12cm" },
+            { q: "Find the equation of the line which passes through (-2, 1) and is perpendicular to the line 4x – 2y + 1 = 0.", options: ["2y – x – 4 = 0", "2y + x = 0", "2y – x = 0", "y – 2x – 5 = 0"], answer: "2y + x = 0" },
+            { q: "If a line is parallel to the line 2y – rx + 4 = 0 and perpendicular to the line 4y+ x – 28 = 0, then the value of r is", options: ["4", "8", "-8", "6"], answer: "-8" },
+            { q: "The first derivative of y = (2 + 3x)4 at x = -1 is", options: ["12", "-12", "4", " -4"], answer: "-12" },
+            { q: "The minimum value of (x) = x2 – 4x + 5 in the interval [1,-1] is", options: ["-2", "10", "4", "5"], answer: "-2" },
+            { q: "A company is to select three different handset phones from five different types of Nokia brand and two different types of Samsung brand. In how many ways can the company choose the handsets, so as to include at least one Samsung brand?", options: ["15", "25", "35", "45"], answer: "25" },
+            { q: "The average of three numbers is 325. If the sum of two of the numbers is 1314, find the third number in base 6.", options: ["436", "346", "236", "326"], answer: "346" },
+            { q: "Three times the second term plus the seventh term of an AP is equal to the twelfth term. Find the relationship between the first term a and the common difference d.", options: ["3a – 2d = 0", "3a + 2d = 0", "3a + d = 0", "3a – d= 0"], answer: "3a – 2d = 0" },
+            { q: "A fence of 36m is to be built to make three sides of a rectangular compound, the fourth side being a building. Find the possible lengths of the shorter sides of the compound if the area enclosed is 160m2.", options: ["20m, 10m", "16m, 8m", "20m, 16m", "10m, 8m"], answer: "10m, 8m" },
+            { q: "A bag contains 4x First bank ATM cards, (2x – 1) UBA bank ATM cards and 3(x + 1) Zenith Bank ATM cards. If the probability of picking a First Bank ATM is 2/5; how many UBA Bank ATM cards are in the bag?", options: ["3", "8", "9", "20"], answer: "3" },
+            { q: "Express the product of 0.000128 and 0.00125 in standard form.", options: ["1.6 x 10-11", "1.6 x 10-5", "1.6 x 10-7", "1.6 x 10-4"], answer: "1.6 x 10-7" },
+            { q: "Make x the subject of the relation y = 3 – lnx.", options: ["e3 – y", "ey – 3", "y/3", "3/y"], answer: "e3 – y" },
+            { q: "A student dropped an object from a building 100m high. If the height of the object above the ground after t seconds is 100 + 4.9t2 m, how fast is it falling 3 seconds after it is dropped?", options: ["14.7m/sec", "85.3m/sec", "29.4m/sec", "70.6m/sec"], answer: "29.4m/sec" },
+            { q: "An investor who invested N6,500.00 at some simple interest rate collected a total amount of N7,800.00 after four years. How much simple interest would he have collected after two years if he had invested N9,000.00?", options: ["N1,000.00", "N10,000.00", "N5,400.00", "N900.00"], answer: "N900.00" }, 
+            { q: "Differentiate (cosθ + sinθ)2 with respect to θ.", options: ["2cos2θ", "2sin2θ", "-2cos2θ", "-2sin2θ"], answer: "2cos2θ" },
+            { q: "If the sum of the roots of the equation 2x2 – 5px + 8 = 0 is five times the product of the roots, find the value of p.", options: ["-8", "1/8", "8", " -1/8"], answer: "8" },
+            { q: "Find the area of region enclosed by the curve y = 2 – x2 and the line y = -x.", options: ["3/2", "9", "3", " -9/2"], answer: " -9/2" },
+            { q: "If x – 1 is a factor of 3x3 – px2 + 5x – 3p, find the value of p.", options: ["-2", "2", "½", " -½"], answer: "2" },
+            { q: "In a school, 180 students offer  Mathematics or Physics or both. If 125 offer Mathematics and 105 offer Physics. How many students offer Mathematics only?", options: ["75", "80", "55", "125"], answer: "75" },
+            { q: "Find the value of x for which 3(24x + 3) = 96", options: ["2", "-2", "½", "-½"], answer: "½" },
+            { q: "The cost of renovating a 5m square room is N500. What is the cost of renovating a 10m square room?", options: ["N1, 000", "N2, 500", "N2, 000", "N10, 000"], answer: "N2, 000" },
+            { q: "Find the rate of change of the total surface area S of a sphere with respect to its radius r when r = 2.", options: ["8p", "16p", "10p", "14p"], answer: "16p" },
+            { q: "Differentiate (cosθ + sinθ)2 with respect to θ.", options: ["2cos2θ", "2Sin2θ", "-2cos2θ", "-2sin2θ"], answer: "2cos2θ" },
+            { q: "A polynomial in x whose zeroes are 2, 1 and -3 is", options: ["x3 – 7x + 6 = 0", "x3 + 7x – 6 = 0", "x3 – 7x – 6 = 0", "x3 + 7x + 6 = 0"], answer: "x3 – 7x + 6 = 0" },
+            { q: "Find the range of values of x for which 7x – 3 > 3x + 4.", options: ["x < 7/4", "x > 7/4", "7x < 4", "-4 x < 7"], answer: "x > 7/4" },
+            { q: "Let P be a probability function on set S, where S = {C1, C2, C3, C4}. Find P(C3) if P(C1) = 3/10 and P(C4) = 1/4.", options: ["⅖", "½", "⅙", "⅓"], answer: "⅙" },
+            { q: "Calculate the standard deviation of the following data 7, 8, 9, 10, 11, 12, 13.", options: ["2", "4", "10", "11"], answer: "2" },
+            { q: "If w is the mode and z is the median of the following set of numbers: 2.4, 2.1, 1.6, 2.6, 2.6, 3.7, 2.1 and 2.6, then (3w, 2z) is", options: ["(2.6, 2.5)", "(2.1, 2.5)", "(7.8, 5.0)", " (6.2, 5.0)"], answer: "(7.8, 5.0)"},
+            { q: "A trapezium has two parallel sides of length 6cm and 8cm. If the area is 42cm2, find the distance between the parallel sides.", options: ["6cm", "7cm", "8cm", "5cm"], answer: "6cm" },
+            { q: "An arc of a circle of length 22cm subtends an angle of 3yo at the centre of the circle. Find the value of y, if the radius of the circle is 7cm.", options: ["30o", "60o", "120o", "150o"], answer: "60o" },
+            { q: "Find the locus of a point which moves such that its distance from the line y = 3 is a constant k.", options: ["y = 3 + k", "y = 3 – k", "y = 3 + k", "y = k – 3"], answer: "y = 3 + k" },
+            { q: "If x + 1 is a factor of the polynomial 5x2 – 4px + 3, find the value of p.", options: ["½", "2", "-2", " -½"], answer: "-2" },
+            { q: "Find the point of intersection of the lines 2x + 3y – 21 = 0 and x – 2y – 7 = 0.", options: ["(9, 1)", " (1, 9)", "(15/2 , 2)", "(-9, -1)"], answer: "(9, 1)" },
+
+            { q: "Find the value of n if 13n + 24n = 41n", options: ["8", "7", "6", "5"], answer: "6" },
+            { q: "A polygamist decided to give 20% of his monthly income to his three wives as their monthly allowance. The eldest wife got 45% of the allowance and the youngest got 25%. How much was the man’s monthly income if the second wife got ₦3,000.00?", options: ["₦50,000.00", "₦33,000.00", "₦60,000.00", "₦45,000.00"], answer: "₦50,000.00" },
+        ];
+        
+        function toggleDarkMode() {
+            document.body.classList.toggle("dark-mode");
+        }
+        
+        function startExam() {
+            timeLeft = parseInt(document.getElementById("timeInput").value) * 60;
+            document.getElementById("quizForm").style.display = "block";
+            document.getElementById("timeInput").style.display = "none";
+            document.querySelector("button[onclick='startExam()']").style.display = "none";
+            updateTimer();
+            timerInterval = setInterval(updateTimer, 1000);
+            loadQuestions();
+        }
+        
+        function updateTimer() {
+            let minutes = Math.floor(timeLeft / 60);
+            let seconds = timeLeft % 60;
+            document.getElementById("timer").textContent = `Time Left: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                checkAnswers();
+            }
+            timeLeft--;
+        }
+        
+        function loadQuestions() {
+            const questionContainer = document.getElementById("questions");
+            questionContainer.innerHTML = "";
+            questions.forEach((question, index) => {
+                let optionsHtml = question.options.map(option => 
+                    `<input type='radio' name='q${index}' value='${option}'> ${option}<br>`
+                ).join('');
+                questionContainer.innerHTML += `<div class='question'><p>${index + 1}. ${question.q}</p>${optionsHtml}</div>`;
+            });
+        }
+        
+        function checkAnswers() {
+            clearInterval(timerInterval);
+            let score = 0;
+            let reviewContent = "";
+            questions.forEach((question, index) => {
+                let selectedOption = document.querySelector(`input[name='q${index}']:checked`);
+                if (selectedOption) {
+                    if (selectedOption.value === question.answer) {
+                        score++;
+                    }
+                }
+                reviewContent += `<p><strong>${index + 1}. ${question.q}</strong><br>Correct Answer: ${question.answer}<br><em>Explanation: ${question.explanation}</em></p>`;
+            });
+            document.getElementById("result").textContent = `You scored ${score} out of ${questions.length}`;
+            document.getElementById("reviewContent").innerHTML = reviewContent;
+            document.getElementById("reviewSection").style.display = "block";
+            updateLeaderboard(score);
+        }
+        
+        function updateLeaderboard(score) {
+            leaderboard.push(score);
+            leaderboard.sort((a, b) => b - a);
+            localStorage.setItem("leaderboard", JSON.stringify(leaderboard.slice(0, 5)));
+            document.getElementById("leaderboard").innerHTML = leaderboard.map(s => `<li>${s}</li>`).join('');
+        }
+    </script>
+</body>
+</html>

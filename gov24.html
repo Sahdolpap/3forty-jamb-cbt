@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>goverment202</title>
+        <link href="3forty.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h2>GOVERMENT2024</h2>
+        <button onclick="toggleDarkMode()">Toggle Dark Mode</button>
+        <br>
+        <label for="timeInput">Set Time (minutes):</label>
+        <input type="number" id="timeInput" min="1" max="120" value="10">
+        <button onclick="startExam()">Start Exam</button>
+        <p class="timer" id="timer"></p>
+        <div class="progress-bar"><div class="progress" id="progress"></div></div>
+        <form id="quizForm" style="display:none;">
+            <div id="questions"></div>
+            <button type="button" onclick="checkAnswers()">Submit</button>
+        </form>
+        <p class="result" id="result"></p>
+        <h3>Leaderboard</h3>
+        <ul id="leaderboard"></ul>
+        <div id="reviewSection">
+            <h3>Review Answers</h3>
+            <div id="reviewContent"></div>
+        </div>
+    </div>
+
+    <script>
+
+ let timerInterval;
+        let timeLeft;
+        let correctSound = new Audio('https://www.fesliyanstudios.com/play-mp3/4386');
+        let incorrectSound = new Audio('https://www.fesliyanstudios.com/play-mp3/4387');
+        let leaderboard = JSON.parse(localStorage.getItem("leaderboard")) || [];
+        const questions = [
+            { q: "The fees collected by local governments at motor parks represents", options: ["levies", "fines", "income tax", "user charge"], answer: "levies", explanation: "working on it." },
+            { q: "The first Nigerian Permanent Representative to the United Nations was", options: ["Alhaji Yusuf Maitama Sule", "General Joseph Garba", "Professor Ibrahim Gambari", "Chief Samuel Adebo"], answer: "General Joseph Garba", explanation: "working on it " },
+            { q: "The main legislative body in Nigeria between 1966 and 1975 was the", options: ["Supreme Military Council", "Armed Forces Ruling Council", "Provisional Ruling Council", "National Security Council"], answer: "Supreme Military Council" },
+            { q: "A meeting of the legislature is usually brought to an end with", options: ["a dissolution", "an adjournment", "suspension", "a prorogation"], answer: "a prorogation" },
+            { q: "The Structural Adjustment Programme was introduced by the", options: ["Babangida regime", "Abacha regime", "Murtala/Obasanjo regime", "Buhari regime"], answer: "Babangida regime" },
+            { q: "Which of the following justifies the Afro-centric foreign policy of Nigeria?", options: ["Her location in the West African sub-region.", "Her colonization by a foreign power.", "Her physical size, population and resource endowments.", "Her ability to contribute to peace keeping missions"], answer: "Her ability to contribute to peace keeping missions" },
+            { q: "Financial allocations to local governments by the federal or the state government to supplement the cost of a project is called", options: ["revenue allocation", "reimbursement", "statutory allocation", "matching grant"], answer: "matching grant" },
+            { q: "Unicameralism is a feature of the legislature in", options: ["Israel", "the United Kingdom", "the United States", "Ghana"], answer: "Ghana" },
+            { q: "In which of the following is the ceremonial and executive powers fused?", options: ["Presidential system of government", "Federal system of government", "Parliamentary system of government", "Unitary system of government"], answer: "Presidential system of government" },
+            { q: "Power differs from influence in that it is.", options: ["persuasive while influence is directive.", "coercive while influence is harmful.", "coercive while influence is persuasive", "arrogant while influence is corruptive"], answer: "coercive while influence is persuasive" },
+            { q: "Political behavior is governed by", options: [" political socialization", "political ideology", "political economy", "political culture"], answer: "political culture" },
+            { q: "The approval of treaties and agreements of the Economic Community of West African States is the responsibility of the", options: ["Secretariate", "Council of Ministers", "ECOWAS Tribunal", "Assembly of Heads of State and Government"], answer: "Assembly of Heads of State and Government" },
+            { q: "The charter of the United Nations was drawn up in", options: ["New York", "San Franciso", "Washington DC", "Los Angeles"], answer: "Los Angeles" },
+            { q: "Southern Nigeria was divided into Eastern and Western provinces for administrative purposes in", options: ["1935", "1937", "1939", "1941"], answer: "1939" },
+            { q: "Prior to 1976, local governments were", options: ["part of the state government machinery", "autonomous bodies concerned with local affairs", "grassroots agents of the federal government", "administrative instruments of the Native Authority"], answer: "part of the state government machinery" },
+            { q: "An electoral system in which the candidate who receives the largest number of votes wins is", options: ["the preferential ballot", "the second ballot", "proportional system", "plurality system"], answer: "plurality system" },
+            { q: "Which of the following groups advocated political union of African states?", options: ["the congo group", "the brazzaville group", "the casablanca group", "the monrovia group"], answer: "the casablanca group" },
+            { q: "A government controlled by a few people for their own interest is said to be", options: ["an oligarchy", "a meritocracy", "a tyranny", "an autocracy"], answer: "an oligarchy" },
+            { q: "One major democratic innovation in local government administration introduced by the Babangida regime was the.", options: ["appointment of portfolio councillors", "appointment of retired military officers as sole administrators.", "selection of heads of personnel management departments from the councillors.", "separation of powers between the executive and legislative arms of the councils"], answer: "separation of powers between the executive and legislative arms of the councils" }, 
+            { q: "Imperialism was adopted by Europe to.", options: ["expand its economic and political base", "develop the economies of the colonies.", "establish a democratic society similar to that of Europe.", "end ethnic rivalries in the colonies"], answer: "expand its economic and political base" },
+            { q: "Which of the following pairs of countries were trust countries of the United Nations?", options: ["Tanganyika and Ghana", "Cameroon and Niger", "Togo and Namibia", "Botswana and Zaire"], answer: "Togo and Namibia" },
+            { q: "Which of the following traditional political systems was segmentary?", options: ["Kanem Bornu", "Benin", "Igbo", "Yoruba"], answer: "Igbo" },
+            { q: "The countries in which Nigeria participated in the ECOMOG peace-keeping operations were", options: ["Liberia and Guinea", "Sierra Leone and Coted’Ivoire", "Senegal and Coted’Ivoire", "Liberia and Sierra Leone"], answer: "Liberia and Sierra Leone" },
+            { q: "The headquarters of the International Court of Justice is in", options: ["Paris", "The Hague", "London", "Washington DC"], answer: "The Hague" },
+            { q: "To qualify for absorption into the administrative cadre of the civil service in Nigeria, an applicant must be", options: ["knowledgeable in civil service rules", "holder of a first university degree", "specifically trained in public administration", "senior civil servant"], answer: "holder of a first university degree" },
+            { q: "The constitution that introduced restricted franchise into Nigeria politics was the", options: ["Independence Constitution", "Lyttleton Constitution", "Richard Constitution", "Clifford Constitution"], answer: "Clifford Constitution" },
+            { q: "The central point of capitalism, as expounded by Karl Marx, is that", options: ["capitalists’ profit is the surplus value obtained from workers labour", "workers are inherently incapable of being owners of their labour", "capitalists shall always increase workers earning capacity through wages", "capitalists shall always readily consent to workers’ welfare demands"], answer: "capitalists’ profit is the surplus value obtained from workers labour" },
+            { q: "The notion of equality before the law is the same as the principle of", options: ["supremacy of the constitution", "rule of law", "independence of the judiciary", "social equality"], answer: "rule of law" },
+            { q: "Federalism was adopted in Nigeria as a constitutional response to the problem of", options: ["educational imbalance", "national identity", "ethnic pluralism", "manpower and resources"], answer: "ethnic pluralism" },
+            { q: "The Willink Commission was set up to", options: ["solve boundary problems", "review revenue allocation formula", "examine issues relating to the welfare of groups", "draw up a new constitution"], answer: "examine issues relating to the welfare of groups" },
+            { q: "The change in the role of traditional rulers in local government administration in Nigeria can be attributed to the", options: ["1976 local government reforms", "involvement of the military in politics", "lack of support for the traditional rulers by the citizens", "1988 civil service reforms"], answer: "1976 local government reforms" },
+            { q: "A sovereign state is one", options: ["Whose constitution can only be changed by a military government", "Whose government decisions are made independent of sovereign interference", "Where its citizens can speak without fear or favour", "In which sovereignty is invested in the military"], answer: "Whose government decisions are made independent of sovereign interference" },
+            { q: "The resignation of the cabinet after a defeat in parliament is an expression of the principle of", options: ["political accountability", "collective responsibility", "checks and balances", "rule of law"], answer: "collective responsibility"},
+            { q: "On what is charismatic authority based?", options: ["Inherited wealth and power", "Tyrannical tendencies", "Institutional processes", "Personal ability and influence"], answer: "Personal ability and influence" },
+            { q: "In which order did the various European groups penetrate into the interior of present-day Nigeria?", options: ["Explorers, missionaries, traders and imperialists", "Explorers, traders, missionaries and imperialists", "Explorers, traders, imperialists and missionaries", "Explorers, imperialists, traders and missionaries"], answer: "Explorers, traders, missionaries and imperialists" },
+            { q: "A court order compelling the executive or its agencies to produce an unlawfully detained person is called a writ of", options: ["mandamus", "subpoena", "habeas corpus", "injunction"], answer: "habeas corpus" },
+            { q: "King Williams Dappa Pepple was deposed and first sent to", options: ["London", "Fernando Pole", "Canary Island", "Island Prison of Ascension"], answer: "Fernando Pole" },
+            { q: "The traditions of a people that shape their government and politics represent their …", options: ["political culture", "political ideology", "political acculturation", "political socialization"], answer: "political culture" },
+            { q: "The main reason for the poor performance of the Public Complaints Commission in Nigeria is that", options: ["its activities are interfered with", "it lacks adequate funds to play its roles", "people have not been lodging complaints", "it lacks the powers to prosecute offenders"], answer: "it lacks the powers to prosecute offenders" },
+            { q: "The first institution introduced by the military to exercise legislative power was the", options: ["Supreme Military Council", "Armed Forces Ruling Council", "Federal Executive Council", "Provisional Ruling Council"], answer: "Supreme Military Council" },
+        ];
+        
+        function toggleDarkMode() {
+            document.body.classList.toggle("dark-mode");
+        }
+        
+        function startExam() {
+            timeLeft = parseInt(document.getElementById("timeInput").value) * 60;
+            document.getElementById("quizForm").style.display = "block";
+            document.getElementById("timeInput").style.display = "none";
+            document.querySelector("button[onclick='startExam()']").style.display = "none";
+            updateTimer();
+            timerInterval = setInterval(updateTimer, 1000);
+            loadQuestions();
+        }
+        
+        function updateTimer() {
+            let minutes = Math.floor(timeLeft / 60);
+            let seconds = timeLeft % 60;
+            document.getElementById("timer").textContent = `Time Left: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                checkAnswers();
+            }
+            timeLeft--;
+        }
+        
+        function loadQuestions() {
+            const questionContainer = document.getElementById("questions");
+            questionContainer.innerHTML = "";
+            questions.forEach((question, index) => {
+                let optionsHtml = question.options.map(option => 
+                    `<input type='radio' name='q${index}' value='${option}'> ${option}<br>`
+                ).join('');
+                questionContainer.innerHTML += `<div class='question'><p>${index + 1}. ${question.q}</p>${optionsHtml}</div>`;
+            });
+        }
+        
+        function checkAnswers() {
+            clearInterval(timerInterval);
+            let score = 0;
+            let reviewContent = "";
+            questions.forEach((question, index) => {
+                let selectedOption = document.querySelector(`input[name='q${index}']:checked`);
+                if (selectedOption) {
+                    if (selectedOption.value === question.answer) {
+                        score++;
+                    }
+                }
+                reviewContent += `<p><strong>${index + 1}. ${question.q}</strong><br>Correct Answer: ${question.answer}<br><em>Explanation: ${question.explanation}</em></p>`;
+            });
+            document.getElementById("result").textContent = `You scored ${score} out of ${questions.length}`;
+            document.getElementById("reviewContent").innerHTML = reviewContent;
+            document.getElementById("reviewSection").style.display = "block";
+            updateLeaderboard(score);
+        }
+        
+        function updateLeaderboard(score) {
+            leaderboard.push(score);
+            leaderboard.sort((a, b) => b - a);
+            localStorage.setItem("leaderboard", JSON.stringify(leaderboard.slice(0, 5)));
+            document.getElementById("leaderboard").innerHTML = leaderboard.map(s => `<li>${s}</li>`).join('');
+        }
+    </script>
+</body>
+</html>

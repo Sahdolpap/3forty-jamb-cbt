@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>chem 2023</title>
+        <link href="3forty.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h2>CHEMISTRY2023</h2>
+        <button onclick="toggleDarkMode()">Toggle Dark Mode</button>
+        <br>
+        <label for="timeInput">Set Time (minutes):</label>
+        <input type="number" id="timeInput" min="1" max="120" value="10">
+        <button onclick="startExam()">Start Exam</button>
+        <p class="timer" id="timer"></p>
+        <div class="progress-bar"><div class="progress" id="progress"></div></div>
+        <form id="quizForm" style="display:none;">
+            <div id="questions"></div>
+            <button type="button" onclick="checkAnswers()">Submit</button>
+        </form>
+        <p class="result" id="result"></p>
+        <h3>Leaderboard</h3>
+        <ul id="leaderboard"></ul>
+        <div id="reviewSection">
+            <h3>Review Answers</h3>
+            <div id="reviewContent"></div>
+        </div>
+    </div>
+
+    <script>
+
+ let timerInterval;
+        let timeLeft;
+        let correctSound = new Audio('https://www.fesliyanstudios.com/play-mp3/4386');
+        let incorrectSound = new Audio('https://www.fesliyanstudios.com/play-mp3/4387');
+        let leaderboard = JSON.parse(localStorage.getItem("leaderboard")) || [];
+        const questions = [
+
+            { q: "Which of the following is a mixture?", options: ["Sodium chloride", "Sea water", "Iron filings", "Granulated sugar"], answer: "Sea water", explanation: "working on it" },
+
+            { q: "Two elements, X and Y, have atomic numbers 8 and 13 respectively. The formula for the possible compound found between X and Y is", options: ["Y2X3", "XY2", "X3Y2", "X2Y3"], answer: "Y2X3", explanation: "workiing on it " },
+
+            { q: "3 g of a mixture of CaO and CaCO3 was heated to a constant mass. If 0.44 g of CO2 was liberated, calculate the percentage of CaO in the mixture.", options: ["33.3%", "50%", "66.67%", "25%"], answer: "66.67%" },
+
+            { q: "An alkanoic acid has a molecular mass of 88. Its molecular formula is", options: ["C4H9COOH", "C5H11COOH", "C3H5COOH", "C3H7COOH"], answer: "C3H7COOH" },
+
+            { q: "If the rate of diffusion of oxygen is taken as 1cm3s-1, what will be the rate of diffusion of methane whose relative molecular mass is 16?", options: ["2.0", "1.8", "1.4", "1.0"], answer: "1.4" },
+
+            { q: "An increase in temperature causes an increase in the pressure of a gas in a fixed volume due to an increase in the", options: ["Number of molecules of the gas", "Density of the gas molecules", "Number of collisions between the gas molecules", "Number of collisions between the gas molecules and the walls of the container"], answer: "Number of collisions between the gas molecules and the walls of the container" },
+
+            { q: "In electrolysis, the chemical reaction which takes place at the anode is", options: ["dissociation", "hydrolysis", "oxidation", "reduction"], answer: "oxidation" },
+
+            { q: "In the electrolysis of brine, it is essential to prevent the mixing of the products because", options: ["sodium and chlorine readily combine", "chlorine gives a green coloration", "chlorine readily recombines with sodium hydroxide", "sodium hydroxide forms a carbonate in the presence of air and chlorine"], answer: "sodium hydroxide forms a carbonate in the presence of air and chlorine" },
+
+            { q: "In what way is equilibrium constant for the forward reaction related to that of the reverse reaction?", options: ["The two equilibrium constants are identical", "The product of the two is always greater than one", "The product of the two is expected to be one", "The addition of the two is expected to be one"], answer: "The product of the two is expected to be one" },
+
+            { q: "When chlorine water is exposed to sunlight, the gas evolved is", options: ["Cl2", "O2", "HCl", "CO2"], answer: "CO2" },
+            { q: "Two immiscible liquids with different boiling points can be separated by", options: ["the use of separating funnel", "evaporation", "distillation", "decantation"], answer: "the use of separating funnel" },
+
+            { q: "A mixture of CaCl2 and CaCO3 in water can be separated by", options: ["evaporation", "sublimation", "distillation", "decantation"], answer: "decantation" },
+
+            { q: "Consider the reaction represented by xPb(NO3)2 → 2PbO + yNO2 + zO2 What are the values of x, y and z respectively?", options: ["2, 6, 3", "1, 4, 2", "2, 4, 1", "2, 4, 2"], answer: "2, 4, 1" },
+
+            { q: "20 cm3 of H2 mixed and separated with 100 cm3 of air containing 21% O2. Calculate the volume of the residual gases at 110 °C.", options: ["31 cm3", "11 cm3", "90 cm3", "110 cm3"], answer: "110 cm3" },
+
+            { q: "What is responsible for metallic bonding?", options: ["Sharing of electrons between the metal atoms", "Attraction between the atomic nuclei and the cloud of electrons", "Transfer of electrons from one atom to another", "Attraction between positive and negative ions"], answer: "Attraction between the atomic nuclei and the cloud of electrons" },
+
+            { q: "25 cm3 of 1.5 M solution of NaCl are added to 50 cm3 0f 3 M NaCl. The molar concentration of the resulting solution is", options: ["2.5 M", "3 M", "2.25 M", "4.5 M"], answer: "2.5 M" },
+            { q: "A solution of salt formed from HCl and NH3 solutions is", options: ["acidic", "basic", "complex", "neutral"], answer: "acidic" },
+            { q: "Which of the following elements will burn in excess oxygen to form a product that is neutral to litmus?", options: ["Carbon", "Hydrogen", "Sulphur ", "Sodium"], answer: "Hydrogen" },
+            { q: "A current was passed for 10 mins and 0.2 mole of Cu was deposited. How many grammes of Ag will it deposit? (Cu = 64, Ag = 108)", options: ["43.2g", "21.6g", "10.8g", "5.4g"], answer: "43.2g" }, 
+            { q: "Pollution of underground water by metal ions is very likely in a soil that has high", options: ["acidity", "alkalinity", "chloride content", "nitrate content"], answer: "nitrate content" },
+            { q: "The presence of NaCl in ice will", options: ["lower the boiling point of NaCl", "increase the melting point of NaCl", "make NaCl impure", "lower the melting point of ice"], answer: "lower the melting point of ice" },
+            { q: "What are the values of x, y and z in the equation below? xNH3 + yO2 → zNO + 6H2O", options: ["2, 3, 4", "4, 5, 4", "6, 5, 4", "2, 3, 4"], answer: "4, 5, 4" },
+            { q: "Calculate the volume of CO2 measured at s.t.p produced on heating 250g of potassium hydrogen trioxocarbonate(IV) strongly. (K = 39, H = 1, C = 12, O = 16)", options: ["28 dm3", "2.8 dm3", "5.6 dm3", "11.2 dm3"], answer: "28 dm3" },
+            { q: "The boiling points of water, ethanol, methylbenzene and butan-2-ol are 373.0K, 351.3K, 383.6K and 372.5K respectively. Which liquid has the highest vapour pressure at 323.0K?", options: ["Water", "Methylbenzene", "Ethanol", "Butan-2-ol"], answer: "Ethanol" },
+            { q: "The conclusion from Rutherford’s alpha-scattering experiment is that", options: ["Atoms are mostly empty space with a small nucleus", "Emissions from radioactive substances consist of three main components", "There is a nuclear pull on orbital electrons", "Electrons are deflected by both magnetic and electric fields"], answer: "Atoms are mostly empty space with a small nucleus" },
+            { q: "Elements P, Q and R have atomic numbers 9, 16 and 20 respectively. Which of them would gain electron(s) during ionic bonding?", options: ["Q and R", "P and R", "P and Q", "P, Q and R"], answer: "P and Q" },
+            { q: "Which of the following has the lowest pH?", options: ["5cm3 of M/10 HCl", "10cm3 of M/10 HCl", "20cm3 of M/8 HCl", "15cm3 of M/2 HCl"], answer: "15cm3 of M/2 HCl" },
+            { q: "Which of the following is an acid salt?", options: ["(NH4)2CO3", "CHCOONa", "KHSO4", "MgSO4.7H2O"], answer: "KHSO4" },
+            { q: "CrO2-7 + 14H+ + 6I → 2Cr3+ + 3I2 + 7H2O The change in the oxidation number of oxygen in the equation above is", options: ["0", "1", "2", "7"], answer: "0" },
+            { q: "During the electrolysis of CuSO4 solution using Platinum electrodes, which of the following occurs?", options: ["Acidity increases at the cathode", "Oxygen is liberated at the cathode", "pH decreases at the cathode", "pH of solution decreases"], answer: "pH of solution decreases" },
+            { q: "Crystallization is a better method of separation than precipitation because", options: ["precipitation tends to bring other solutes out of solution", "crystallization is applicable to all solids", "precipitation always involves salting-out", "crystallization can only be done at high temperatures"], answer: "precipitation tends to bring other solutes out of solution" },
+            { q: "Which of the following is not a chemical change?", options: ["burning of magnesium", "rusting of iron", "action of water on potassium", "dissolving powdered sulfur in carbon disulfide"], answer: "dissolving powdered sulfur in carbon disulfide" },
+            { q: "An important ore of iron contains 72.36% iron and 27.64% oxygen. Determine its empirical formula", options: ["FeO", "Fe2O3", "Fe3O4", "Fe2O2"], answer: "FeO"},
+            { q: "Which of the following decreases when a given mass of gas is compressed to half its initial volume?", options: ["average intermolecular distance", "frequency of collision", "number of molecules present", "atomic radius of each particle"], answer: "average intermolecular distance" },
+            { q: "The densities of two gases X and Y are 2.5gdm-3 and 10.0gdm-3 respectively. What is the rate of diffusion of X relative to Y?", options: ["1:2.5", "2.5:1", "1:2", "2:1"], answer: "2:1" },
+            { q: "The properties of elements are periodic functions of their", options: ["atomic number", "atomic radius", "atomic volume", "mass number"], answer: "atomic number" },
+            { q: "Which of the following solutions containing only hydroxyl ions will liberate hydrogen gas when reacted with Mg metals?", options: ["1.0×10-5moldm-3", "1.0×10-13moldm-3", "1.0×10-3moldm-3", "1.0×10-2moldm-3"], answer: "1.0×10-13moldm-3" },
+            { q: "In the redox reaction2Fe2+ + Cl2 → 2Fe3+ + 2Cl–", options: ["Cl2 is reduced because it has lost electrons", "Cl2 is reduced because its oxidation number has decreased", "Fe2+ is reduced because it has lost electrons", "Fe2+ is reduced because it has gained electrons"], answer: "Cl2 is reduced because its oxidation number has decreased" },
+            { q: "During electrolysis of molten sodium chloride", options: ["chlorine atom gains an electron", "chloride ion gains an electron", "chloride ion is oxidized", "sodium ion is oxidized"], answer: "chloride ion is oxidized" },
+            { q: "Coffee stains are removed with", options: ["turpentine", "ammonia", "borax in water", "kerosene"], answer: "borax in water" },
+            ];
+
+        function toggleDarkMode() {
+            document.body.classList.toggle("dark-mode");
+        }
+        
+        function startExam() {
+            timeLeft = parseInt(document.getElementById("timeInput").value) * 60;
+            document.getElementById("quizForm").style.display = "block";
+            document.getElementById("timeInput").style.display = "none";
+            document.querySelector("button[onclick='startExam()']").style.display = "none";
+            updateTimer();
+            timerInterval = setInterval(updateTimer, 1000);
+            loadQuestions();
+        }
+        
+        function updateTimer() {
+            let minutes = Math.floor(timeLeft / 60);
+            let seconds = timeLeft % 60;
+            document.getElementById("timer").textContent = `Time Left: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                checkAnswers();
+            }
+            timeLeft--;
+        }
+        
+        function loadQuestions() {
+            const questionContainer = document.getElementById("questions");
+            questionContainer.innerHTML = "";
+            questions.forEach((question, index) => {
+                let optionsHtml = question.options.map(option => 
+                    `<input type='radio' name='q${index}' value='${option}'> ${option}<br>`
+                ).join('');
+                questionContainer.innerHTML += `<div class='question'><p>${index + 1}. ${question.q}</p>${optionsHtml}</div>`;
+            });
+        }
+        
+        function checkAnswers() {
+            clearInterval(timerInterval);
+            let score = 0;
+            let reviewContent = "";
+            questions.forEach((question, index) => {
+                let selectedOption = document.querySelector(`input[name='q${index}']:checked`);
+                if (selectedOption) {
+                    if (selectedOption.value === question.answer) {
+                        score++;
+                    }
+                }
+                reviewContent += `<p><strong>${index + 1}. ${question.q}</strong><br>Correct Answer: ${question.answer}<br><em>Explanation: ${question.explanation}</em></p>`;
+            });
+            document.getElementById("result").textContent = `You scored ${score} out of ${questions.length}`;
+            document.getElementById("reviewContent").innerHTML = reviewContent;
+            document.getElementById("reviewSection").style.display = "block";
+            updateLeaderboard(score);
+        }
+        
+        function updateLeaderboard(score) {
+            leaderboard.push(score);
+            leaderboard.sort((a, b) => b - a);
+            localStorage.setItem("leaderboard", JSON.stringify(leaderboard.slice(0, 5)));
+            document.getElementById("leaderboard").innerHTML = leaderboard.map(s => `<li>${s}</li>`).join('');
+        }
+    </script>
+</body>
+</html>

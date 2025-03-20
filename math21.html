@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>math2021</title>
+        <link href="3forty.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h2>MATHEMATHICS2021</h2>
+        <button onclick="toggleDarkMode()">Toggle Dark Mode</button>
+        <br>
+        <label for="timeInput">Set Time (minutes):</label>
+        <input type="number" id="timeInput" min="1" max="120" value="10">
+        <button onclick="startExam()">Start Exam</button>
+        <p class="timer" id="timer"></p>
+        <div class="progress-bar"><div class="progress" id="progress"></div></div>
+        <form id="quizForm" style="display:none;">
+            <div id="questions"></div>
+            <button type="button" onclick="checkAnswers()">Submit</button>
+        </form>
+        <p class="result" id="result"></p>
+        <h3>Leaderboard</h3>
+        <ul id="leaderboard"></ul>
+        <div id="reviewSection">
+            <h3>Review Answers</h3>
+            <div id="reviewContent"></div>
+        </div>
+    </div>
+
+    <script>
+
+ let timerInterval;
+        let timeLeft;
+        let correctSound = new Audio('https://www.fesliyanstudios.com/play-mp3/4386');
+        let incorrectSound = new Audio('https://www.fesliyanstudios.com/play-mp3/4387');
+        let leaderboard = JSON.parse(localStorage.getItem("leaderboard")) || [];
+        const questions = [
+
+              { q: "If the interior angles of a hexagon are 107°, 2x°, 150°, 95°, (2x – 15)° and 123o. Find x.", options: ["80", "110", "90", "50"], answer: "90" },
+            { q: "An arc of a circle subtends an angle 70o at the centre. If the radius of the circle is 6 cm, calculate the area of the sector subtended by the given angle.", options: ["22 cm2", "44 cm2", "66 cm2", "88 cm2"], answer: "22 cm2" },
+            { q: "If sec2θ + tan2θ = 3, then the angle θ is equal to", options: ["30o", "45o", "60o", "90o"], answer: "45o" },
+            { q: "On a pie chart, there are four sectors of which three angles are 45°, 90° and 135°. If the smallest sector represents ₦28,00, how much is the largest sector?", options: ["₦6,000", "₦84,000", "₦48,000", "₦42,000"], answer: "₦84,000" },
+            { q: "Find the number of committees of three that can be formed consisting of two men and one woman from four men and three women", options: ["3", "6", "18", "24"], answer: "18" },
+            { q: "A bag contains 5 black balls and 3 red balls. Two balls are picked at random without replacement. What is the probability that a black and red ball are picked?", options: ["15/28", "13/28", "5/14", "3/14"], answer: "15/28" },
+            { q: "If x is the sum of the prime numbers between 1 and 6, and y the HCF of 6, 9, 15, find the product of x and y.", options: ["27", "30", "33 ", "90%"], answer: "30" },
+            { q: "A 5.0g of salt was weighed by Vera as 5.1g. What is the percentage error?", options: ["20%", "2%", "1%", "0.2%"], answer: "2%" }, 
+            { q: "Two brothers, John and Tim, own a store. The ratio of John’s share to Tim’s is 11:9. Later, Tim sells two-third of his share to John for ₦720.00. Find the value of the store.", options: ["₦I,080.00", "₦2,400.00", "₦3,000.00", "₦3,600.00"], answer: "₦2,400.00" },
+            { q: "Four interior angles of a pentagon are (90 – x)o, (90 + x)o, (110 – 2x)o, (110 + 2x)o. Find the fifth interior angle.", options: ["110°", "120°", "130°", "140°"], answer: "140°" },
+             { q: "A bag contains 4x First bank ATM cards, (2x – 1) UBA bank ATM cards and 3(x + 1) Zenith Bank ATM cards. If the probability of picking a First Bank ATM is 2/5; how many UBA Bank ATM cards are in the bag?", options: ["3", "8", "9", "20"], answer: "3" },
+            { q: "Express the product of 0.000128 and 0.00125 in standard form.", options: ["1.6 x 10-11", "1.6 x 10-5", "1.6 x 10-7", "1.6 x 10-4"], answer: "1.6 x 10-7" },
+            { q: "Make x the subject of the relation y = 3 – lnx.", options: ["e3 – y", "ey – 3", "y/3", "3/y"], answer: "e3 – y" },
+            { q: "A student dropped an object from a building 100m high. If the height of the object above the ground after t seconds is 100 + 4.9t2 m, how fast is it falling 3 seconds after it is dropped?", options: ["14.7m/sec", "85.3m/sec", "29.4m/sec", "70.6m/sec"], answer: "29.4m/sec" },
+            { q: "An investor who invested N6,500.00 at some simple interest rate collected a total amount of N7,800.00 after four years. How much simple interest would he have collected after two years if he had invested N9,000.00?", options: ["N1,000.00", "N10,000.00", "N5,400.00", "N900.00"], answer: "N900.00" }, 
+            { q: "Differentiate (cosθ + sinθ)2 with respect to θ.", options: ["2cos2θ", "2sin2θ", "-2cos2θ", "-2sin2θ"], answer: "2cos2θ" },
+            { q: "If the sum of the roots of the equation 2x2 – 5px + 8 = 0 is five times the product of the roots, find the value of p.", options: ["-8", "1/8", "8", " -1/8"], answer: "8" },
+            { q: "Find the area of region enclosed by the curve y = 2 – x2 and the line y = -x.", options: ["3/2", "9", "3", " -9/2"], answer: " -9/2" },
+            { q: "If x – 1 is a factor of 3x3 – px2 + 5x – 3p, find the value of p.", options: ["-2", "2", "½", " -½"], answer: "2" },
+            { q: "In a school, 180 students offer  Mathematics or Physics or both. If 125 offer Mathematics and 105 offer Physics. How many students offer Mathematics only?", options: ["75", "80", "55", "125"], answer: "75" },
+            { q: "Find the value of x for which 3(24x + 3) = 96", options: ["2", "-2", "½", "-½"], answer: "½" },
+            { q: "The cost of renovating a 5m square room is N500. What is the cost of renovating a 10m square room?", options: ["N1, 000", "N2, 500", "N2, 000", "N10, 000"], answer: "N2, 000" },
+            { q: "Find the rate of change of the total surface area S of a sphere with respect to its radius r when r = 2.", options: ["8p", "16p", "10p", "14p"], answer: "16p" },
+            { q: "Differentiate (cosθ + sinθ)2 with respect to θ.", options: ["2cos2θ", "2Sin2θ", "-2cos2θ", "-2sin2θ"], answer: "2cos2θ" },
+            { q: "ROkey, Akpan and Toye agreed to set up a mini-business. Okey contributed ⅓ of the capital, Akpan ⅙, and Toye ₦8,400. What is the capital?", options: ["₦7,200", "₦25,200", "₦16,800", "₦8,400"], answer: "₦16,800" },
+            { q: "Factorise 81a3 – 24b6.", options: ["2(3a – 2b2)(3a2 + 6ab2 + 2b4)", "3(3a – 2b2)(9a2 + 6ab2 + 4b4)", "2(2a2– 3b2)(4a2 + 3ab2 + 2b2)", "9(9a – 2b3)(9a2 + 6ab2 + 2b4)"], answer: "3(3a – 2b2)(9a2 + 6ab2 + 4b4)" },
+            { q: "Given that log2 = 0.69, log3 = 1.10 and log7 = 1.90 all to a fixed base, find log10.5 to the same base, without using tables.", options: ["3", "3.69", "2.31 ", "2.41"], answer: "2.31 " },
+            { q: "A polynomial in x whose zeroes are 2, 1 and -3 is", options: ["x3 – 7x + 6 = 0", "x3 + 7x – 6 = 0", "x3 – 7x – 6 = 0", "x3 + 7x + 6 = 0"], answer: "x3 – 7x + 6 = 0" },
+            { q: "Find the range of values of x for which 7x – 3 > 3x + 4.", options: ["x < 7/4", "x > 7/4", "7x < 4", "-4 x < 7"], answer: "x > 7/4" },
+            { q: "Let P be a probability function on set S, where S = {C1, C2, C3, C4}. Find P(C3) if P(C1) = 3/10 and P(C4) = 1/4.", options: ["⅖", "½", "⅙", "⅓"], answer: "⅙" },
+            { q: "Calculate the standard deviation of the following data 7, 8, 9, 10, 11, 12, 13.", options: ["2", "4", "10", "11"], answer: "2" },
+            { q: "If w is the mode and z is the median of the following set of numbers: 2.4, 2.1, 1.6, 2.6, 2.6, 3.7, 2.1 and 2.6, then (3w, 2z) is", options: ["(2.6, 2.5)", "(2.1, 2.5)", "(7.8, 5.0)", " (6.2, 5.0)"], answer: "(7.8, 5.0)"},
+            { q: "A trapezium has two parallel sides of length 6cm and 8cm. If the area is 42cm2, find the distance between the parallel sides.", options: ["6cm", "7cm", "8cm", "5cm"], answer: "6cm" },
+
+            { q: "If x + 1 is a factor of a + 3x + 3x2 + bx3 and the remainder when this expression is divided by x + 2, is 20, find the values of a and b.", options: ["+2 and -2", " -2 and -2", "-2 and +2", "+2 and +2"], answer: " -2 and -2" },
+            { q: "The sum of two numbers is twice their difference. If the difference of the numbers is P, find the larger of the two numbers", options: ["p/2", "3p/2", "5p/2", "3p"], answer: "3p/2" },
+            { q: "Find the tangent to the acute angle between the lines 2x + y = 3 and 3x – 2y = 5.", options: ["-7/4", "7/8", "7/4", "7/2"], answer: "7/4" },
+            { q: "What value of x makes 32(x – 1) – 8(3x – 2) = 1 a valid equation?", options: ["1", "-1", "2", "-2"], answer: "2" },
+            { q: "If the volume of a hemisphere is increasing at a steady rate of 18π m3 s−1, at what rate is its radius changing when its is 6m?", options: ["2.50 m/s", "2.00 m/s", "0.25 m/s", "0.20 m/s"], answer: "0.25 m/s" },
+            { q: "One root of the equation 27x2 + bx + 8 = 0 is known to be the square of the other. Find b.", options: ["–30", "60", "90", "36"], answer: "–30" },
+            { q: "X and Y are two events. The probability of X or Y is 0.7 and that of X is 0.4. If X and Y are independent, find the probability of Y.", options: ["0.30", "0.50", "0.57", "1.80"], answer: "0.30" },
+
+        ];
+        
+        function toggleDarkMode() {
+            document.body.classList.toggle("dark-mode");
+        }
+        
+        function startExam() {
+            timeLeft = parseInt(document.getElementById("timeInput").value) * 60;
+            document.getElementById("quizForm").style.display = "block";
+            document.getElementById("timeInput").style.display = "none";
+            document.querySelector("button[onclick='startExam()']").style.display = "none";
+            updateTimer();
+            timerInterval = setInterval(updateTimer, 1000);
+            loadQuestions();
+        }
+        
+        function updateTimer() {
+            let minutes = Math.floor(timeLeft / 60);
+            let seconds = timeLeft % 60;
+            document.getElementById("timer").textContent = `Time Left: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                checkAnswers();
+            }
+            timeLeft--;
+        }
+        
+        function loadQuestions() {
+            const questionContainer = document.getElementById("questions");
+            questionContainer.innerHTML = "";
+            questions.forEach((question, index) => {
+                let optionsHtml = question.options.map(option => 
+                    `<input type='radio' name='q${index}' value='${option}'> ${option}<br>`
+                ).join('');
+                questionContainer.innerHTML += `<div class='question'><p>${index + 1}. ${question.q}</p>${optionsHtml}</div>`;
+            });
+        }
+        
+        function checkAnswers() {
+            clearInterval(timerInterval);
+            let score = 0;
+            let reviewContent = "";
+            questions.forEach((question, index) => {
+                let selectedOption = document.querySelector(`input[name='q${index}']:checked`);
+                if (selectedOption) {
+                    if (selectedOption.value === question.answer) {
+                        score++;
+                    }
+                }
+                reviewContent += `<p><strong>${index + 1}. ${question.q}</strong><br>Correct Answer: ${question.answer}<br><em>Explanation: ${question.explanation}</em></p>`;
+            });
+            document.getElementById("result").textContent = `You scored ${score} out of ${questions.length}`;
+            document.getElementById("reviewContent").innerHTML = reviewContent;
+            document.getElementById("reviewSection").style.display = "block";
+            updateLeaderboard(score);
+        }
+        
+        function updateLeaderboard(score) {
+            leaderboard.push(score);
+            leaderboard.sort((a, b) => b - a);
+            localStorage.setItem("leaderboard", JSON.stringify(leaderboard.slice(0, 5)));
+            document.getElementById("leaderboard").innerHTML = leaderboard.map(s => `<li>${s}</li>`).join('');
+        }
+    </script>
+</body>
+</html>

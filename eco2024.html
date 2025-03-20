@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>economics2024</title>
+        <link href="3forty.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h2>ECONOMICS2024</h2>
+        <button onclick="toggleDarkMode()">Toggle Dark Mode</button>
+        <br>
+        <label for="timeInput">Set Time (minutes):</label>
+        <input type="number" id="timeInput" min="1" max="120" value="10">
+        <button onclick="startExam()">Start Exam</button>
+        <p class="timer" id="timer"></p>
+        <div class="progress-bar"><div class="progress" id="progress"></div></div>
+        <form id="quizForm" style="display:none;">
+            <div id="questions"></div>
+            <button type="button" onclick="checkAnswers()">Submit</button>
+        </form>
+        <p class="result" id="result"></p>
+        <h3>Leaderboard</h3>
+        <ul id="leaderboard"></ul>
+        <div id="reviewSection">
+            <h3>Review Answers</h3>
+            <div id="reviewContent"></div>
+        </div>
+    </div>
+
+    <script>
+
+ let timerInterval;
+        let timeLeft;
+        let correctSound = new Audio('https://www.fesliyanstudios.com/play-mp3/4386');
+        let incorrectSound = new Audio('https://www.fesliyanstudios.com/play-mp3/4387');
+        let leaderboard = JSON.parse(localStorage.getItem("leaderboard")) || [];
+        const questions = [
+            { q: "Inflation is likely to benefit", options: ["Debtors", "Persons with back savings", "Creditors", "Persons who lived on fixed pension funds"], answer: "Debtors", explanation: "working on it" },
+            { q: "Under the ECOWAS agreement, a Nigerian can enter and stay in Ghana without a Visa for a period of", options: ["100 days", "30 days", "90 days", "14 days"], answer: "90 days", explanation: " " },
+            { q: "The shape of a production frontiers is determined by", options: ["the increasing relative costs", "returns to scale", "diminishing returns to a fixed factor", "increasing returns to a variable factor"], answer: "the increasing relative costs" },
+            { q: "A central argument of cardinal utility is", options: ["measurable", "psychological", "external factors", "internal factors"], answer: "measurable" },
+            { q: "If a total cost curve is plotted, marginal cost can be illustrated by the", options: ["U-shaped curve cutting the total cost curve at its lowest point", "slope of tangent to the curve at any given point", "straight line from the origin to the mid-point of the curve", "straight line cutting the curve at its highest point"], answer: "slope of tangent to the curve at any given point" },
+            { q: "One of the reasons for an exception demand curve is the", options: ["availability of credit facilities", "change in price of commodity", "availability of substitutes", "expectation of future change in price"], answer: "expectation of future change in price" },
+            { q: "Short-run period in production is a period too short for a firm to be able to change its", options: ["total revenue", "scale of production", "variable inputs", "total outputs"], answer: "scale of production" },
+            { q: "Under a floating exchange rate regime, the determinant of the exchange rate is", options: ["an Act of National Assembly", "the highest denomination of the currency", "demand for and supply of foreign goods", "the system of government"], answer: "demand for and supply of foreign goods" },
+            { q: "In order to increase revenue, the seller of a commodity whose demand is elastic is advised to", options: ["reduce price", "reduce output", "increase price", "retain price"], answer: "reduce price" },
+            { q: "An institution that regulates trade relations among members is the", options: ["EU", "OPEC", "ADB", "IMF"], answer: "EU" },
+            { q: "A decision on input combination solves the economic problems of", options: ["how to produce", "for whom to produce", "when to produce", "what to produce"], answer: "how to produce" },
+            { q: "If the short-run cost of a firm is U-shaped, the marginal and average costs are equal where the", options: ["marginal cost is falling", "average variable cost is minimum", "average cost is minimum", "average fixed cost is falling"], answer: "average variable cost is minimum" },
+            { q: "Correction in the GNP figures for price changes require the use of a", options: ["price deflator", "price index", "retail price index", "producer price index"], answer: "price deflator" },
+            { q: "The gains from international trade are shared on the basis of the", options: ["quantity produced of each of the traded goods", "cost of production of each of the traded goods", "bilateral trade agreements", "succumbed"], answer: "terms of trade" },
+            { q: "The labour force of a country best describes", options: ["the number of people in paid employment", "the number of people receiving pension", "people within the retirement age", "people within the working age"], answer: "people within the working age" },
+            { q: "The output approach to the measuring national income is based on the computation of", options: ["final output", "factor cost", "value added", "profits earned"], answer: "final output" },
+            { q: "A high rent on land will affect the cost of producing maize", options: ["positively", "negatively", "at early stage of production", "at the later stage of production"], answer: "negatively" },
+            { q: "Some of the key indicators of underdevelopment in a country are", options: ["poverty, low income and low unemployment level.", "low level of illiteracy, low income and poverty", "poverty, low level of literacy and low income ", "poverty, high level of literacy and low income"], answer: "poverty, low level of literacy and low income" },
+            { q: "Internal economies of scale are expected to bring about", options: ["a decrease in long-run average cost", "a decrease in short-run average cost", "an increase in short-run average cost", "an increase in long-run average cost"], answer: "a decrease in long-run average cost" }, 
+            { q: "Public debt is composed of", options: ["internal debts and World Bank loans", "internal and external debts", "money owed to local and foreign contractors", "loans granted by IMF and ADB"], answer: "internal and external debts" },
+            { q: "The most reliable and acceptable index of economic growth is the", options: ["Wholesale Price Index", "Consumer Price Index", "National Income", "Retailer’s Price Index"], answer: "National Income" },
+            { q: "The quantity supplied of a commodity increases best when", options: ["Production increases", "Demand increases", "Price of the commodity increases", "Population of the country increases"], answer: "Price of the commodity increases" },
+            { q: "Production in Economics occurs when", options: ["a commodity or service is sold", "utility is created or added", "a commodity is manufactured", "raw materials are produced or extracted from mines", "all of these"], answer: "sold" },
+            { q: "Which of the following is NOT one of the balance of payment entries?", options: ["the current account", "foreign exchange", "Import and Export duties", "Short-term capital"], answer: "foreign exchange" },
+            { q: "The most basic concern of economists is to", options: ["satisfy all human want", "redistribute income so that it is used correctly", "create perfect competition", "study ways of allocating scarce resources in order to satisfy human wants"], answer: "study ways of allocating scarce resources in order to satisfy human wants" },
+            { q: "Which of the following is NOT included in measuring national income by the income approach?", options: ["Wages and salaries of public servant", "student grants and scholarship", "Profit of companies", "income earned by self employed persons such as lawyers"], answer: "student grants and scholarship" },
+            { q: "An imperfectly competitive market is one where", options: ["commodities are differentiated", "a large number of firms sell homogenous products", "input and output prices are unaffected", "each firm faces a horizontal demand curve"], answer: "commodities are differentiated" },
+            { q: "A firm is at its optimum size when", options: ["it produce the greatest output at a minimum cost", "it has a motive to increase output", "marginal cost equals marginal revenue", "marginal cost is less than marginal revenue"], answer: "it produce the greatest output at a minimum cost" },
+            { q: "Tax incidence is the analysis of", options: ["how progressive a tax is", "how a tax is collected", "how distorting a tax is", "who ultimately pays the tax"], answer: "tolerate" },
+            { q: "A shift in the production possibility frontier could result from", options: ["unemployment", "changes in the combination of goods produced", "inflation", "changes in production techniques"], answer: "changes in production techniques" },
+            { q: "Capital provided by individuals to the firm by purchasing stocks is called?", options: ["debt capital", "fixed capital", "circulating capital", "equity capital"], answer: "equity capital" },
+            { q: "A characteristic of a debenture is that?", options: ["its yield is based on profits", "its yield is a fixed rate of interest", "it has no redemption date", "there is a voting right when interest is paid"], answer: "its yield is a fixed rate of interest" },
+            { q: "The main objective of the Economic Community of West African State is to", options: ["establish a West African Development Bank", "create a West African army", "introduce a common currency for the sub-region", "promote the free movement of persons, goods and services within the sub-region"], answer: "promote the free movement of persons, goods and services within the sub-region"},
+            { q: "An increase in the discount rate is an indication of a central bank’s intention to pursue?", options: ["an expansionary monetary policy", "a disciplined monetary policy", "a dynamic monetary policy", "a contractionary monetary policy"], answer: "an expansionary monetary policy" },
+            { q: "If the marginal utility of good X exceeds that of good Y, this implies that", options: ["a rational consumer will buy less of X", "consuming more of X will increase total utility", "Y is an inferior good", "X will be cheaper than Y"], answer: "consuming more of X will increase total utility" },
+            { q: "The mean is the best measure of central tendency because it", options: ["is not affected by extreme values in a data", "is a midpoint value in an array of data", "is a balancing point in an observation", "can be calculated from incomplete data"], answer: "is not affected by extreme values in a data" },
+            { q: "A central argument of cardinal utility is", options: ["measurable", "psychological", "external factors", "internal factors"], answer: "measurable" },
+            { q: "The technical relationship between input combination and maximum attainable output is called", options: ["an isocost", "an indifference curve", "an isoquant", "a production function"], answer: "a production function" },
+            { q: "A discount house is a market where", options: ["short-term and medium-term loans are obtained", "short-term loans are obtained", "shares are bought and sold", "various bills are exchanged"], answer: "various bills are exchanged" },
+            { q: "The primary function of non-bank financial institutions is to", options: ["grant loans to banks", "manage investment portfolios for government", "mobilize savings for investment", "receive deposits from banks"], answer: "mobilize savings for investment" },
+                    ];
+        
+        function toggleDarkMode() {
+            document.body.classList.toggle("dark-mode");
+        }
+        
+        function startExam() {
+            timeLeft = parseInt(document.getElementById("timeInput").value) * 60;
+            document.getElementById("quizForm").style.display = "block";
+            document.getElementById("timeInput").style.display = "none";
+            document.querySelector("button[onclick='startExam()']").style.display = "none";
+            updateTimer();
+            timerInterval = setInterval(updateTimer, 1000);
+            loadQuestions();
+        }
+        
+        function updateTimer() {
+            let minutes = Math.floor(timeLeft / 60);
+            let seconds = timeLeft % 60;
+            document.getElementById("timer").textContent = `Time Left: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                checkAnswers();
+            }
+            timeLeft--;
+        }
+        
+        function loadQuestions() {
+            const questionContainer = document.getElementById("questions");
+            questionContainer.innerHTML = "";
+            questions.forEach((question, index) => {
+                let optionsHtml = question.options.map(option => 
+                    `<input type='radio' name='q${index}' value='${option}'> ${option}<br>`
+                ).join('');
+                questionContainer.innerHTML += `<div class='question'><p>${index + 1}. ${question.q}</p>${optionsHtml}</div>`;
+            });
+        }
+        
+        function checkAnswers() {
+            clearInterval(timerInterval);
+            let score = 0;
+            let reviewContent = "";
+            questions.forEach((question, index) => {
+                let selectedOption = document.querySelector(`input[name='q${index}']:checked`);
+                if (selectedOption) {
+                    if (selectedOption.value === question.answer) {
+                        score++;
+                    }
+                }
+                reviewContent += `<p><strong>${index + 1}. ${question.q}</strong><br>Correct Answer: ${question.answer}<br><em>Explanation: ${question.explanation}</em></p>`;
+            });
+            document.getElementById("result").textContent = `You scored ${score} out of ${questions.length}`;
+            document.getElementById("reviewContent").innerHTML = reviewContent;
+            document.getElementById("reviewSection").style.display = "block";
+            updateLeaderboard(score);
+        }
+        
+        function updateLeaderboard(score) {
+            leaderboard.push(score);
+            leaderboard.sort((a, b) => b - a);
+            localStorage.setItem("leaderboard", JSON.stringify(leaderboard.slice(0, 5)));
+            document.getElementById("leaderboard").innerHTML = leaderboard.map(s => `<li>${s}</li>`).join('');
+        }
+    </script>
+</body>
+</html>

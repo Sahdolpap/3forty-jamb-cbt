@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>agricultural science</title>
+        <link href="3forty.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h2>AGRICUTURAL SCIENCE2023</h2>
+        <button onclick="toggleDarkMode()">Toggle Dark Mode</button>
+        <br>
+        <label for="timeInput">Set Time (minutes):</label>
+        <input type="number" id="timeInput" min="1" max="120" value="10">
+        <button onclick="startExam()">Start Exam</button>
+        <p class="timer" id="timer"></p>
+        <div class="progress-bar"><div class="progress" id="progress"></div></div>
+        <form id="quizForm" style="display:none;">
+            <div id="questions"></div>
+            <button type="button" onclick="checkAnswers()">Submit</button>
+        </form>
+        <p class="result" id="result"></p>
+        <h3>Leaderboard</h3>
+        <ul id="leaderboard"></ul>
+        <div id="reviewSection">
+            <h3>Review Answers</h3>
+            <div id="reviewContent"></div>
+        </div>
+    </div>
+
+    <script>
+
+ let timerInterval;
+        let timeLeft;
+        let correctSound = new Audio('https://www.fesliyanstudios.com/play-mp3/4386');
+        let incorrectSound = new Audio('https://www.fesliyanstudios.com/play-mp3/4387');
+        let leaderboard = JSON.parse(localStorage.getItem("leaderboard")) || [];
+        const questions = [
+
+
+            { q: "What is  soil conservation, and why is it important in agriculture?", options: ["Soil conservation involves the removal of topsoil for agricultural purposes", "Soil conservation refers to the preservation and sustainable management of soil resources", "Soil conservation aims to maximize crop yields through intensive farming practices", "Soil conservation focuses on increasing soil fertility through the use of chemical fertilizers"], answer: "Soil conservation refers to the preservation and sustainable management of soil resources", explanation: "working on it" },
+            { q: "Which of the following are branches of agriculture?", options: ["Economics and Mathematics", "Agronomy and Horticulture", "Biology and Chemistry", "Botany and Zoology"], answer: "Agronomy and Horticulture", explanation: "working on it" },
+            { q: "What are the main differences between monocot and dicot plants?", options: ["Monocots have parallel leaf veins, while dicots have branched leaf veins", "Monocots have flower parts in multiples of three, while dicots have flower parts in multiples of four or five", "All of the above", "Monocots have fibrous root systems, while dicots have taproot systems"], answer: "All of the above", explanation: "Monocots and dicots are differentiated by several characteristics. Monocots have parallel leaf veins, while dicots have branched leaf veins. This is due to the different growth patterns of the two types of plants. Monocots have flower parts in multiples of three, while dicots have flower parts in multiples of four or five. This is due to the different evolutionary paths of the two types of plants. Monocots have fibrous root systems, while dicots have taproot systems. This is due to the different needs of the two types of plants, with monocots typically being grasses and cereals that benefit from a fibrous root system, and dicots being broad-leaved plants that benefit from a taproot system." },
+            { q: "What is pollination in plants?", options: ["The dispersal of seeds by wind or animals", "The transfer of pollen from the anther to the stigma of a flower", "The process of seed formation after fertilization", "The production of flowers by a plant"], answer: "The transfer of pollen from the anther to the stigma of a flower", explanation: "Pollination is the process by which pollen grains from the male reproductive organ of a flower (anther) are transferred to the female reproductive organ (stigma) of the same or a different flower." },
+            { q: "What is the process of removing the horns of cattle called?", options: ["Mating", "Dipping", "Dehorning", "Castration"], answer: "Dehorning", explanation: "Dehorning is the process of removing the horns of livestock. Cattle, sheep, and goats are sometimes dehorned for economic and safety reasons." },
+            { q: "What is agricultural ecology?", options: ["The study of genetics and breeding techniques used in agriculture", "The study of climate change and its effects on agricultural productivity", "The study of ecological processes in agricultural systems and their interactions", "The study of agricultural practices and their economic impact on farmers"], answer: "The study of ecological processes in agricultural systems and their interactions", explanation: "Agricultural ecology is a branch of science that focuses on understanding the ecological processes and interactions within agricultural systems. It involves studying the relationships between crops, livestock, pests, beneficial organisms, soil, water, and the surrounding environment." },
+            { q: "What is the primary focus of agronomy in agriculture?", options: ["Management of soil and crops", "Breeding and genetics of crops", "Study of climate and weather patterns", "Marketing and selling of agricultural products"], answer: "Management of soil and crops", explanation: "The primary focus of agronomy in agriculture is the management of soil and crops. Agronomy is a branch of agricultural science that deals with the principles and practices of soil and crop management" },
+            { q: "Which of the following is an example of a farm implement used for soil preparation in agriculture?", options: ["Seeder", "Sprayer", "Harvester", "Plow"], answer: "Plow", explanation: "A plow is an example of a farm implement used for soil preparation in agriculture. A plow is a tool or implement that is pulled or attached to a tractor or draft animals and is used to break up, loosen, and turn over the soil. It helps in preparing the soil for planting crops by creating furrows or ridges and incorporating organic matter or fertilizer into the soil." },
+            { q: "What is the primary purpose of farmstead planning in agriculture?", options: ["Maximizing crop yields", "Optimizing livestock management", " Efficient utilization of available space", "Ensuring efficient water usage"], answer: "Efficient utilization of available space", explanation: "working on it" },
+            { q: "Which part of a tractor is responsible for providing power to the attached implements or machinery?", options: ["Steering system", "Transmission", "Engine", "Hydraulic system"], answer: "Hydraulic system", explanation: "The hydraulic system of a tractor is responsible for providing power to the attached implements or machinery. It uses a fluid under pressure to transmit power from the tractor to the implements for various functions. The engine is the power source of the tractor, but it is the hydraulic system that transmits this power to the implements." },
+            { q: "Which of the following periods marked the beginning of agricultural practices by early human societies?", options: [" Paleolithic Age", "Information Age", "Renaissance Era", "Industrial Revolution"], answer: "Paleolithic Age", explanation: "The Paleolithic Age, also known as the Stone Age, marked the beginning of agricultural practices by early human societies. During this period, which began around 2.6 million years ago and lasted until around 10,000 BCE, humans transitioned from being solely hunter-gatherers to engaging in early forms of agriculture." },
+            { q: "The Balami is a breed of", options: ["Pig", "Sheep", "Goat", "Cattle"], answer: "Sheep", explanation: "The Balami is a breed of sheep. It is one of the domestic sheep found in Africa, particularly in Nigeria. Therefore, the correct answer is 'Sheep'." },
+            { q: "What is the primary purpose of a pasture in agriculture?", options: ["Grazing animals for forage", "Providing shade for livestock", "Fostering wildlife habitat", "audience"], answer: "Grazing animals for forage", explanation: "workin on it" },
+            { q: "What is the primary goal of agricultural extension services in the field of agricultural economics?", options: ["Promoting sustainable farming practices", "Maximizing crop yields", "Enhancing market access for farmers ", "Increasing farm profits"], answer: "Enhancing market access for farmers ", explanation: "working on it" },
+            { q: "Which of the following is NOT a principle of agronomy?", options: ["Controlling pests and diseases", "Managing soil fertility", "Promoting biodiversity conservation", "Maximizing crop yield"], answer: "Promoting biodiversity conservation", explanation: "Agronomy is a branch of agricultural science that focuses on crop production and soil management. It involves the application of scientific principles and techniques to maximize crop yield and ensure sustainable agricultural practices." },
+            { q: "What is the primary focus of animal husbandry in agriculture?", options: ["Veterinary care for domestic pets", "Protection of wildlife habitats", "Breeding and management of farm animals", "Crop cultivation for livestock feed"], answer: "Breeding and management of farm animals", explanation: "" },
+            { q: "The governor frowned at the …. which slowed down the implementation of policy decisions.?", options: ["Providing financial assistance to farmers", "Marketing agricultural products to consumers", "Conducting research on new farming techniques", "Delivering agricultural education and training to farmers"], answ
+            er: "Delivering agricultural education and training to farmers", explanation: "The role of agricultural extension officers in the field of agriculture is primarily to deliver agricultural education and training to farmers. Agricultural extension officers work closely with farmers, providing them with information, knowledge, and technical expertise to improve their farming practices. They facilitate the transfer of scientific research and technology to farmers, helping them adopt modern and sustainable agricultural practices." },
+            { q: "What is the primary purpose of storage facilities in agriculture?", options: ["Offering a workspace for farm laborers", "Storing and preserving harvested crops", "Providing shelter for farm animals ", "Housing agricultural machinery and equipment"], answer: "Storing and preserving harvested crops", explanation: "The primary purpose of storage facilities in agriculture is to store and preserve harvested crops. These facilities, such as warehouses, silos, or cold storage units, are designed to protect harvested crops from environmental factors, pests, and diseases. They provide a controlled environment that helps maintain the quality, nutritional value, and market value of the stored crops." },
+            { q: "What are the primary benefits of agricultural extension services?", options: ["Preservation of traditional farming practices", "Enhanced knowledge and skills of farmers", "Increased crop diversity and yield", "Improved market access for agricultural products"], answer: "Increased crop diversity and yield", explanation: "working on it" }, 
+            { q: "Which of the following is a primary function of the digestive system?", options: ["Regulation of body temperature", "Oxygen transport", "Production of hormones", "Absorption of nutrients"], answer: "Absorption of nutrients", explanation: "working on it" },
+            { q: "What is a soil profile, and what information does it provide in agricultural practices?", options: ["A soil profile is an analysis of soil microorganisms and their activities", "A soil profile is an assessment of soil compaction and drainage", "A soil profile is a vertical section of the soil that reveals its layers or horizons", "A soil profile is a measurement of soil pH and nutrient levels"], answer: "A soil profile is a vertical section of the soil that reveals its layers or horizons", explanation: "A soil profile refers to a vertical section of the soil that displays the different layers or horizons of the soil. It provides valuable information about the composition, structure, and properties of the soil, which is crucial in agricultural practices." },
+            { q: "What does the scale of preference represent in agricultural decision-making?", options: ["The ranking of available choices based on personal preference", "The availability of resources for agricultural production", "The total cost of implementing different agricultural practices", "The market demand for agricultural products"], answer: "The ranking of available choices based on personal preference", explanation: "working on it" },
+            { q: "Which of the following is an important aspect of livestock management in agriculture?", options: ["Irrigation scheduling", "Fertilizer application rates", "Animal health and welfare", "Crop rotation techniques"], answer: "Animal health and welfare", explanation: "Animal health and welfare is an important aspect of livestock management in agriculture. Livestock managers and farmers are responsible for ensuring the well-being of the animals under their care. This includes providing proper nutrition, appropriate housing and shelter, disease prevention and control measures, and veterinary care." },
+            { q: "Which of the following is an example of an agricultural extension method used to disseminate information to farmers?", options: ["Crop rotation", "Irrigation systems", "Farmer field schools", "Soil testing"], answer: "Farmer field schools", explanation: "Farmer field schools are an example of an agricultural extension method used to disseminate information to farmers. Farmer field schools are structured learning programs where farmers actively participate in hands-on training and field demonstrations." },
+            { q: "Which of the following is an example of a biotic factor in an agricultural ecosystem?", options: ["Rainfall", "Soil pH", "Temperature", "Crop pests"], answer: "Crop pests", explanation: "Biotic factors in an agricultural ecosystem refer to the living organisms or biological components that influence the dynamics of the ecosystem. These factors can include plants, animals, microorganisms, and other living organisms that interact with agricultural crops. Crop pests, such as insects, rodents, and pathogens, are examples of biotic factors that can have a significant impact on agricultural systems." },
+            { q: "Which of the following best describes agricultural marketing?", options: ["The process of producing agricultural goods", "The transportation of agricultural products to consumers", "The storage and preservation of agricultural goods", "The promotion and selling of agricultural products"], answer: "The promotion and selling of agricultural products", explanation: "Agricultural marketing refers to the activities involved in the promotion and selling of agricultural products. It encompasses various processes, such as market research, product promotion, pricing, distribution, and sales." },
+            { q: "What does the concept of demand and supply refer to in agriculture?", options: ["The government's role in regulating agricultural prices", "The distribution of agricultural resources among different regions", "The quantity of agricultural products produced and consumed", "The interaction between buyers and sellers in agricultural markets"], answer: "The interaction between buyers and sellers in agricultural markets", explanation: "The concept of demand and supply in agriculture refers to the interaction between buyers and sellers in agricultural markets. It is based on the principle that the quantity of agricultural products demanded by consumers and the quantity supplied by producers determine the equilibrium price and quantity in the market." },
+            { q: "What is crop science?", options: ["The study of agricultural machinery and equipment", "The study of weather patterns and their impact on crop growth", "The study of soil fertility and nutrient management", "The study of plant genetics and breeding"], answer: "The study of plant genetics and breeding", explanation: "Crop science is the branch of agriculture that focuses on the scientific study of crops, particularly their genetics, breeding, and improvement. It involves the application of scientific principles and techniques to enhance the productivity, quality, and resilience of crop plants." },
+            { q: "Which of the following is a branch of agriculture that focuses on the cultivation of fruits, vegetables, and ornamental plants?", options: ["Apiculture", "Aquaculture", "Sericulture", "Horticulture"], answer: "Horticulture", explanation: "Horticulture is a branch of agriculture that focuses on the cultivation, management, and production of fruits, vegetables, and ornamental plants. It includes practices related to the growing, harvesting, processing, and marketing of horticultural crops. Horticulturists may specialize in areas such as fruit production, vegetable farming, floriculture (ornamental plants and flowers), or nursery operations." },
+            { q: "What is the primary purpose of mixed cropping in agriculture?", options: ["Maximizing the yield of a single crop", "Simplifying farm management practices", "Enhancing soil fertility through crop rotation", "Reducing the risk of crop failure"], answer: "Reducing the risk of crop failure", explanation: "The primary purpose of mixed cropping in agriculture is to reduce the risk of crop failure. Mixed cropping involves growing two or more different crops together in the same field. This practice helps farmers mitigate the potential negative impacts of pests, diseases, adverse weather conditions, and market fluctuations that can affect a single crop." },
+            { q: "Which of the following is an example of a pasture commonly used in agriculture?", options: ["Corn plantation", "Orange orchard", "Cattle pasture", "Wheat field"], answer: "Cattle pasture", explanation: "A cattle pasture is an example of a pasture commonly used in agriculture. It is an area of land specifically designated for grazing cattle. Cattle pastures consist of various grasses and forage crops that provide the necessary nutrition for the cattle to graze on." },
+            { q: "What does the term recombinant DNA refer to in biotechnology?", options: ["DNA synthesized in a laboratory", "DNA replicated using polymerase chain reaction (PCR)", "DNA extracted from ancient fossils", "DNA modified to contain genes from different organisms"], answer: "DNA modified to contain genes from different organisms", explanation: "The term recombinant DNA in biotechnology refers to DNA that has been modified or engineered to contain genes from different organisms. This process involves the insertion of specific genes or gene segments into the DNA of an organism, resulting in the creation of a new DNA sequence with combined genetic information." },
+
+            { q: "What is the primary purpose of an agricultural extension service?", options: ["Providing financial assistance to farmers", "Offering training and advisory services to farmers", "Conducting research on agricultural practices", "Marketing and selling agricultural products"], answer: "Offering training and advisory services to farmers", explanation: "The primary purpose of an agricultural extension service is to offer training and advisory services to farmers. Agricultural extension services provide education, information, and support to farmers and rural communities to enhance their agricultural practices, productivity, and livelihoods. They offer training programs, workshops, demonstrations, and on-farm advisory services to help farmers adopt new technologies, improve their farming techniques, manage pests and diseases, and enhance sustainable agricultural practices."},
+            { q: "Which of the following is an example of agricultural technology?", options: ["Crop rotation", "Irrigation", "Organic farming", "Composting"], answer: "Irrigation", explanation: "Irrigation is an example of agricultural technology. It involves the artificial application of water to agricultural fields to supplement natural rainfall. Irrigation systems can range from simple methods like surface irrigation to more advanced techniques like drip irrigation or sprinkler systems." },
+
+            { q: "What is the primary goal of crop improvement in agriculture?", options: ["Reducing pest and disease resistance", "Expanding crop cultivation areas", "Increasing crop diversity", "Enhancing crop yield and quality"], answer: "Enhancing crop yield and quality", explanation: "The primary goal of crop improvement in agriculture is to enhance crop yield and quality. Crop improvement involves various techniques, such as plant breeding, genetic engineering, and selection of superior traits, to develop new varieties or cultivars with improved characteristics. These characteristics may include higher yields, improved nutritional content, resistance to pests and diseases, tolerance to environmental stresses, and better adaptation to specific growing conditions." },
+
+            { q: "Which of the following is an objective of agricultural development programs?", options: ["Maximizing profits for individual farmers", "Increasing dependency on external inputs", "Enhancing sustainable agricultural practices", "Expanding land holdings for large-scale farms"], answer: "Enhancing sustainable agricultural practices", explanation: "working on it" },
+
+            { q: "What is commercial agriculture?", options: ["Large-scale farming for profit and market-oriented production", "Farming for self-sufficiency and survival", "Small-scale farming with limited use of modern technology", "Intensive farming using advanced technology"], answer: "Large-scale farming for profit and market-oriented production", explanation: "Commercial agriculture refers to farming practices that are primarily focused on generating profit through the sale of agricultural products in the market. It involves large-scale cultivation of crops or raising of livestock with the aim of maximizing productivity and economic returns." },
+
+            { q: "Which of the following is a common method of disseminating information to farmers?", options: ["All of the above", "Social media campaigns", "Radio broadcasts", "Field demonstrations"], answer: "All of the above", explanation: "Disseminating information to farmers involves utilizing various methods to reach them effectively. Social media campaigns, such as through platforms like Facebook, Twitter, and WhatsApp, have become increasingly popular for sharing agricultural knowledge, news, and updates. Radio broadcasts, especially in rural areas, serve as an important means of reaching farmers with relevant agricultural information." },
+
+            { q: "Which of the following is NOT a component of soil?", options: ["Organic matter", "Water", "rubber", "Minerals"], answer: "rubber", explanation: "working on it" },
+
+            { q: "Which of the following is NOT an agent of pollination in plants?", options: ["Bees", "Wind", "Water", "Fungi"], answer: "Fungi", explanation: "working on it" },
+
+
+            { q: "Farm animals can be classified into three main categories based on their primary purpose. Which of the following is NOT one of those categories?", options: ["Poultry", "Aquatic animals", "Companion animals", "Livestock animals"], answer: "Aquatic animals", explanation: "working on it" },
+             { q: "Which of the following is a common problem in agricultural economics and extension?", options: ["Inadequate market infrastructure", "Excessive government regulations", "Overreliance on chemical inputs", "Lack of access to modern technology"], answer: "Lack of access to modern technology", explanation: "Agricultural economics and extension deal with the application of economic methods to optimizing the decisions made by agricultural producers. A common problem in this field is the lack of access to modern technology. This can hinder the efficiency and productivity of agricultural practices. Excessive government regulations, overreliance on chemical inputs, and inadequate market infrastructure can also be challenges in agriculture, but they are not specific to agricultural economics and extension."  },
+            { q: "What is a potential disadvantage of mass media for farmers?", options: ["Lack of credibility in agricultural news", "Insufficient coverage of farming practices", "Limited access to information", "Increased cost of agricultural inputs"], answer: "Limited access to information", explanation: "A potential disadvantage of mass media for farmers is limited access to information. This is particularly true in rural areas where access to the internet and other forms of mass media may be limited. While mass media can be a powerful tool for disseminating information, it is not always accessible or relevant to all farmers, particularly those in remote or underserved areas."  },
+            { q: "Which of the following is NOT a component of agronomy?", options: ["Pest management", "Crop production", "Soil management", "Animal husbandry "], answer: "Animal husbandry ", explanation: "Agronomy is a branch of agriculture that focuses on crop production and the management of agricultural systems. It involves various aspects related to growing and cultivating crops. The main components of agronomy include crop production, soil management, and pest management."  },
+            { q: "What is the primary function of the reproductive system in farm animals?", options: ["Digestion of food", "Reproduction and propagation of the species", "Production of milk for offspring", "Maintenance of body temperature"], answer: "Reproduction and propagation of the species", explanation: "working on it"  },
+
+            { q: "What is the primary purpose of farm surveying in agriculture?", options: ["Mapping land boundaries", "Determining soil fertility", "Assessing crop yield", "Identifying pest infestations"], answer: "Mapping land boundaries", explanation: "The primary purpose of farm surveying in agriculture is to accurately map the land boundaries of a farm. Farm surveying involves the measurement and mapping of land to establish property lines, determine field sizes and shapes, and demarcate boundaries between different land parcels."  },
+            { q: "The Sokoto Gudali is a breed of", options: ["Chicken", "Cattle", "Horse", "Goat"], answer: "Cattle", explanation: "working on it"  },
+            { q: "Which of the following is a common by-product of farm animals?", options: ["All of the above", "Wool", "Fertilizer", "Milk"], answer: "All of the above", explanation: "working on it"  },
+
+            { q: "What is the purpose of using a scale of preference in agricultural decision-making?", options: ["To evaluate the environmental impact of farming practices", "To determine the most profitable crops to cultivate", "To allocate resources effectively among different activities", "To prioritize agricultural tasks based on urgency"], answer: "To allocate resources effectively among different activities", explanation: "working on it"  },
+            { q: "Which of the following is an example of a monogastric animal?", options: ["Goat", "Cow", "Chicken", "Sheep"], answer: "Chicken", explanation: "A monogastric is an animal with a single-compartmented stomach. Examples of monogastrics include humans, poultry, pigs, horses, rabbits, dogs and cats. Most monogastrics are generally unable to digest much cellulose food materials such as grasses."  }, 
+
+
+
+
+            
+
+        ];
+        
+        function toggleDarkMode() {
+            document.body.classList.toggle("dark-mode");
+        }
+        
+        function startExam() {
+            timeLeft = parseInt(document.getElementById("timeInput").value) * 60;
+            document.getElementById("quizForm").style.display = "block";
+            document.getElementById("timeInput").style.display = "none";
+            document.querySelector("button[onclick='startExam()']").style.display = "none";
+            updateTimer();
+            timerInterval = setInterval(updateTimer, 1000);
+            loadQuestions();
+        }
+        
+        function updateTimer() {
+            let minutes = Math.floor(timeLeft / 60);
+            let seconds = timeLeft % 60;
+            document.getElementById("timer").textContent = `Time Left: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                checkAnswers();
+            }
+            timeLeft--;
+        }
+        
+        function loadQuestions() {
+            const questionContainer = document.getElementById("questions");
+            questionContainer.innerHTML = "";
+            questions.forEach((question, index) => {
+                let optionsHtml = question.options.map(option => 
+                    `<input type='radio' name='q${index}' value='${option}'> ${option}<br>`
+                ).join('');
+                questionContainer.innerHTML += `<div class='question'><p>${index + 1}. ${question.q}</p>${optionsHtml}</div>`;
+            });
+        }
+        
+        function checkAnswers() {
+            clearInterval(timerInterval);
+            let score = 0;
+            let reviewContent = "";
+            questions.forEach((question, index) => {
+                let selectedOption = document.querySelector(`input[name='q${index}']:checked`);
+                if (selectedOption) {
+                    if (selectedOption.value === question.answer) {
+                        score++;
+                    }
+                }
+                reviewContent += `<p><strong>${index + 1}. ${question.q}</strong><br>Correct Answer: ${question.answer}<br><em>Explanation: ${question.explanation}</em></p>`;
+            });
+            document.getElementById("result").textContent = `You scored ${score} out of ${questions.length}`;
+            document.getElementById("reviewContent").innerHTML = reviewContent;
+            document.getElementById("reviewSection").style.display = "block";
+            updateLeaderboard(score);
+        }
+        
+        function updateLeaderboard(score) {
+            leaderboard.push(score);
+            leaderboard.sort((a, b) => b - a);
+            localStorage.setItem("leaderboard", JSON.stringify(leaderboard.slice(0, 5)));
+            document.getElementById("leaderboard").innerHTML = leaderboard.map(s => `<li>${s}</li>`).join('');
+        }
+    </script>
+</body>
+</html>

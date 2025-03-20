@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>english2023</title>
+        <link href="3forty.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h2>english2023</h2>
+        <button onclick="toggleDarkMode()">Toggle Dark Mode</button>
+        <br>
+        <label for="timeInput">Set Time (minutes):</label>
+        <input type="number" id="timeInput" min="1" max="120" value="10">
+        <button onclick="startExam()">Start Exam</button>
+        <p class="timer" id="timer"></p>
+        <div class="progress-bar"><div class="progress" id="progress"></div></div>
+        <form id="quizForm" style="display:none;">
+            <div id="questions"></div>
+            <button type="button" onclick="checkAnswers()">Submit</button>
+        </form>
+        <p class="result" id="result"></p>
+        <h3>Leaderboard</h3>
+        <ul id="leaderboard"></ul>
+        <div id="reviewSection">
+            <h3>Review Answers</h3>
+            <div id="reviewContent"></div>
+        </div>
+    </div>
+
+    <script>
+
+ let timerInterval;
+        let timeLeft;
+        let correctSound = new Audio('https://www.fesliyanstudios.com/play-mp3/4386');
+        let incorrectSound = new Audio('https://www.fesliyanstudios.com/play-mp3/4387');
+        let leaderboard = JSON.parse(localStorage.getItem("leaderboard")) || [];
+        const questions = [
+            { q: "Some smugglers have created a road diversion in order to … the new import duty.", options: ["circumflex", "circumscribe", "circumspect", "circumvent"], answer: "circumvent", explanation: "working on it" },
+            { q: "It happened that our dog is male but … are all females.", options: ["their’s", "there’s", "theirs’", "theirs"], answer: "theirs", explanation: "working on it" },
+            { q: "We can use the telephone; the lines are all….", options: ["on", "off", "up", "down"], answer: "on" },
+            { q: "Ayayi cashed … our boy’s defensive error to score the equalizer.", options: ["on", "in with", "in on", "in"], answer: "in on" },
+            { q: "I heard that Italy’s victory at the world cup ….…the radio.", options: ["in", "on", "over", "from"], answer: "on" },
+            { q: "He travels very often as if he does not know that a car runs … Petrol.", options: ["with", "by", "on", "in"], answer: "on" },
+            { q: "We were all delighted when the lady …… a bouncing baby boy.", options: ["delivered", "brought forth", "gave birth to", "was delivered of"], answer: "was delivered of" },
+            { q: "Although the problem was simple ……… students were able to solve it.", options: ["few", "a few", "a lot of", "  little"], answer: "few" },
+            { q: "Some students … believed they can succeed in exams without working hard.", options: ["many a times", "many at time", " many a time", "many at times"], answer: "many a time" },
+            { q: "The defendant claimed that he had been … into making a statement.", options: ["coarced", "coaxed", "coarsed", "coerced"], answer: "coerced" }, 
+
+            { q: "We watched the woman as she stood up and … herself more comfortably.", options: [" reseated", "resat", "reseat", "resitted"], answer: "reseated" },
+            { q: "The students……the principal’s appeal for calm and took to the streets.", options: ["deferred", "differed", "defied", "defined"], answer: "defied" },
+            { q: "The noise from the record seller’s workshop …on my ears.", options: ["jeers", "jars", "jams", "jabs"], answer: "jeers" },
+            { q: " The Military Governor upheld the decision of his cabinet.", options: ["Held up", "Abolished", "Reversed", "Maintained"], answer: "Maintained" },
+            { q: "Chidi is naturally taciturn.. ", options: ["Friendly", "Cheerful", "Dumb", "Lively", "Reserved"], answer: "Friendly" },
+            { q: "James is a disco-addict. He takes his studies rather lightly.", options: ["Humorously", "demonstration", "Tediously", "Carefully", "Seriously"], answer: "Seriously" },
+            { q: "There’s …. ventilation in this room; that’s why you don’t breathe well.", options: ["few", "a few", "little", "a little"], answer: "a few" },
+            { q: "Whenever he puts the light on, someone …. to disturb him.", options: ["came", "has come", "comes ", "would come"], answer: "has come" },
+            { q: "It … be taken for repair after all; it’s working again.", options: ["couldn’t", "shouldn’t", "mightn’t", "needn’t"], answer: "needn’t" }, 
+            { q: "Chassis", options: ["Chip", "Cheat", "Sharp", "Character"], answer: "Sharp" },
+    
+
+            { q: "In the match against the Rangers team, the Enyimba boys turned out to be the dark horse.", options: ["played most brilliantly", "played below their form", "won unexpectedly", "lost as expected"], answer: "won unexpectedly" },
+            { q: "He spoke with his heart in his mouth.", options: ["courageously", "with such unusual cowardice", "with a lot of confusion in his speech", "with fright and agitation"], answer: "with fright and agitation" },
+            { q: "The leader in today’s issue of Punch Newspaper focuses on inflation.", options: ["president", "headline", "editorial", "columnist"], answer: "editorial" },
+            { q: "All his plans fell through.", options: ["failed", "were accomplished", "had to be reviewed", "were rejected"], answer: "failed" },
+            { q: "He stared at her.", options: ["glanced", "peeped", "looked", "gazed"], answer: "gazed" },
+            { q: "As he was a gullible leader, his followers took advantage of him.", options: ["He was weak and unable to enforce his authority", "He was partial and unfair in dispensing justice", "He was simple minded to a fault", "He was lacking in education and experience in every affairs"], answer: "He was simple minded to a fault" },
+            { q: "His summary of the lecture was brief and to the point.", options: ["careful", "precise", "accurate", "exact"], answer: "accurate" },
+            { q: "Do you have the same aversion as I do for home videos?", options: ["bitterness", "dislike", "criticism", "indignation"], answer: "dislike" },
+            { q: "I did not think she could be so easily taken in by his pretenses.", options: ["flattered", "deceived", "pregnated", "overcome"], answer: "deceived" },
+            { q: "The witness was guilty of swearing to a statement he knew to be false.", options: ["forgery", "perjury", "libel", "slander"], answer: "perjury" },
+        
+
+            { q: "The giant hydro-electric project is among the …. of colonial rule in Southern Africa.", options: ["inheritance", "remnants", "legacies", "evidence"], answer: "legacies" },
+            { q: "During the inaugural address, the president …. the activities of his government for the past eight years.", options: ["reiterated", "reviewed", "restated", "recited"], answer: "reviewed" },
+            { q: "The World Bank team which visited the landlocked country …. a bleak economic future for it.", options: ["forecast", "discovered", "thought of", "prophesied"], answer: "forecast"},
+            { q: "We traveled all night and arrived …. the Lagos motor park at six o’clock in the morning.", options: ["by", "inside", " in", "at"], answer: "at" },
+            { q: "We ought to stay away from this place …. the robbers come back.", options: ["provided", "should in case", "in case", "since"], answer: "in case" },
+            { q: "The principal will be going away on …. In his absence, the vice principal will …. the school.", options: ["holidays/take over", "holiday/carry on", "holidays/care for", "holiday/look after"], answer: "holiday/look after" },
+            { q: "The new leader has good intentions, but she is unable to ….", options: ["carry them with him", "carry them out", "carry them on", "carry them well"], answer: "carry them out" },
+            { q: "Abuja is not far from here, it is only an ….", options: ["hour of driving", "hour’s drive", "hour by driving", "hours drive"], answer: "hour’s drive" },
+
+            { q: "Do you know if the new lecturer …. yet?", options: ["is arrived", "will be arriving", "has arrived", "had arrived"], answer: "has arrived" },
+            { q: "Had he known, he …. away.", options: ["will go", "will be going", "will have gone", "would have gone"], answer: "would have gone" },
+        ];
+        
+        function toggleDarkMode() {
+            document.body.classList.toggle("dark-mode");
+        }
+        
+        function startExam() {
+            timeLeft = parseInt(document.getElementById("timeInput").value) * 60;
+            document.getElementById("quizForm").style.display = "block";
+            document.getElementById("timeInput").style.display = "none";
+            document.querySelector("button[onclick='startExam()']").style.display = "none";
+            updateTimer();
+            timerInterval = setInterval(updateTimer, 1000);
+            loadQuestions();
+        }
+        
+        function updateTimer() {
+            let minutes = Math.floor(timeLeft / 60);
+            let seconds = timeLeft % 60;
+            document.getElementById("timer").textContent = `Time Left: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                checkAnswers();
+            }
+            timeLeft--;
+        }
+        
+        function loadQuestions() {
+            const questionContainer = document.getElementById("questions");
+            questionContainer.innerHTML = "";
+            questions.forEach((question, index) => {
+                let optionsHtml = question.options.map(option => 
+                    `<input type='radio' name='q${index}' value='${option}'> ${option}<br>`
+                ).join('');
+                questionContainer.innerHTML += `<div class='question'><p>${index + 1}. ${question.q}</p>${optionsHtml}</div>`;
+            });
+        }
+        
+        function checkAnswers() {
+            clearInterval(timerInterval);
+            let score = 0;
+            let reviewContent = "";
+            questions.forEach((question, index) => {
+                let selectedOption = document.querySelector(`input[name='q${index}']:checked`);
+                if (selectedOption) {
+                    if (selectedOption.value === question.answer) {
+                        score++;
+                    }
+                }
+                reviewContent += `<p><strong>${index + 1}. ${question.q}</strong><br>Correct Answer: ${question.answer}<br><em>Explanation: ${question.explanation}</em></p>`;
+            });
+            document.getElementById("result").textContent = `You scored ${score} out of ${questions.length}`;
+            document.getElementById("reviewContent").innerHTML = reviewContent;
+            document.getElementById("reviewSection").style.display = "block";
+            updateLeaderboard(score);
+        }
+        
+        function updateLeaderboard(score) {
+            leaderboard.push(score);
+            leaderboard.sort((a, b) => b - a);
+            localStorage.setItem("leaderboard", JSON.stringify(leaderboard.slice(0, 5)));
+            document.getElementById("leaderboard").innerHTML = leaderboard.map(s => `<li>${s}</li>`).join('');
+        }
+    </script>
+</body>
+</html>

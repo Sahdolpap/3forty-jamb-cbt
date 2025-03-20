@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>phy 2023</title>
+        <link href="3forty.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h2>PHYSIS2023</h2>
+        <button onclick="toggleDarkMode()">Toggle Dark Mode</button>
+        <br>
+        <label for="timeInput">Set Time (minutes):</label>
+        <input type="number" id="timeInput" min="1" max="120" value="10">
+        <button onclick="startExam()">Start Exam</button>
+        <p class="timer" id="timer"></p>
+        <div class="progress-bar"><div class="progress" id="progress"></div></div>
+        <form id="quizForm" style="display:none;">
+            <div id="questions"></div>
+            <button type="button" onclick="checkAnswers()">Submit</button>
+        </form>
+        <p class="result" id="result"></p>
+        <h3>Leaderboard</h3>
+        <ul id="leaderboard"></ul>
+        <div id="reviewSection">
+            <h3>Review Answers</h3>
+            <div id="reviewContent"></div>
+        </div>
+    </div>
+
+    <script>
+
+ let timerInterval;
+        let timeLeft;
+        let correctSound = new Audio('https://www.fesliyanstudios.com/play-mp3/4386');
+        let incorrectSound = new Audio('https://www.fesliyanstudios.com/play-mp3/4387');
+        let leaderboard = JSON.parse(localStorage.getItem("leaderboard")) || [];
+        const questions = [
+            { q: "Which of the following represents the correct precision if the length of a piece of wire is measured with a meter rule?", options: ["35mm", "35.0mm", "35.00mm", "35.01mm"], answer: "35.0mm", explanation: "working on it" },
+            { q: "Which of the following is most strongly deflected by a magnetic field?", options: ["γ-rays", "α-rays", "β-particles", "X-rays"], answer: "β-particles", explanation: "working on it" },
+            { q: "A substance has a half-life of 3min. After 6mins, the count rate was observed to be 600. What was its count rate at zero time?", options: ["200", "1200", "1600", "2400"], answer: "2400" },
+            { q: "A light of energy 5eV falls on a metal and electrons with a maximum kinetic energy of 2eV are ejected. The work function of the metal is", options: ["0.4eV", "2.5eV", "3.0eV", "7.0eV"], answer: "3.0eV" },
+            { q: "If an object is placed in front of two mirrors inclined at 90o, how many images will be formed?", options: ["Five", "Four", "Three", "Two"], answer: "Three" },
+            { q: "A 12V battery has an internal resistance of 0.5Ω. If a cable of 1.0Ω resistance is connected across the terminals of the battery, the current drawn from the battery is", options: ["16.0A", "8.0A", "0.8A", "0.4A"], answer: "8.0A" },
+            { q: "If two parallel wires carry currents flowing in the same direction, the conductors will", options: ["attract each other", "repel each other", "both move in the same direction", "have no effect on each other"], answer: "attract each other" },
+            { q: "From the generating station to each sub-station, power is transmitted at a very high voltage so as to reduce", options: ["eddy current loss", "hysteresis loss", "heating in the cables", "magnetic flux leakage"], answer: "heating in the cables" },
+            { q: "Two tuning forks of frequencies 256Hz and 260Hz are sounded close to each other. What is the frequency of the beats produced?", options: ["516Hz", "258Hz", "4Hz", "300Hz"], answer: "4Hz" },
+            { q: "The eye controls the amount of light reaching the retina by adjusting the", options: ["cornea", "iris", "retina", "optic nerve"], answer: "iris" },
+            { q: "Which of the following is a set of vectors?", options: ["force, mass and momentum", "acceleration, velocity and momentum", "mass, weight and density", "mass, volume and density"], answer: "acceleration, velocity and momentum" },
+            { q: "A catapult used to hold a stone of mass 500g is extended by 20cm with an applied force, F. If the stone leaves with a velocity of 40m/s, the value of F is", options: ["4.0 ×102 N/m2", "2.0 × 103 N", "4.0 × 103 N", "4.0 × 104 N"], answer: "2.0 × 103 N" },
+            { q: "A nuclear reaction initiated by adding neutron is called", options: ["nuclear fission", "nuclear fusion", "nuclear enrichment", "radioactivity"], answer: "nuclear fission" },
+            { q: "The resultant of two forces acting on an object is maximum if the angle between them is", options: ["45o", "0o", "90o", "180o"], answer: "0o" },
+            { q: "200g of water at 90°C is mixed with same quantity of water at 30°C. What is the final temperature?", options: ["50°C", "60°C", "70°C", "80°C"], answer: "60°C" },
+            { q: "The equation PXVYTZ = constant is Charles law when", options: ["x=1, y=1, z=1", "x=0, y=1, z=-1", "x=1, y=0, z=-1", "x=0, y=1, z=1"], answer: "x=0, y=1, z=-1" },
+            { q: "The thermometric substance of an absolute thermometer is", options: ["alcohol", "mercury", "helium", "platinum"], answer: "mercury" },
+            { q: "Dispersion of light by a glass prism is due to the", options: ["different hidden colours of the glass", "high density in glass", "defect in the glass ", "different speeds of various colours in glass"], answer: "different speeds of various colours in glass" },
+            { q: "When an atom loses or gains a charge, it becomes", options: ["an ion", "an electron", "a neutron", "a proton"], answer: "an ion" }, 
+            { q: "To convert an ac dynamo to dc dynamo, the", options: ["number of turns of the coil is increased", "split-ring commutator is replaced with slip rings", "number of turns of the coil is reduced.", "slip rings are replaced with a split-ring commutator"], answer: "slip rings are replaced with a split-ring commutator" },
+            { q: "The unit of inductance is the", options: ["Farad", "Hertz", "Henry", "Coulomb"], answer: "Henry" },
+            { q: "A machine whose efficiency is 60% has a velocity ratio of 5. If a force of 500N is applied to lift a load of P(N), what is the magnitude of P?", options: ["750N", "4166N", "500N", "1500N"], answer: "1500N" },
+            { q: "A mass of gas at 7°C and 70cm of mercury has a volume of 1200cm3. Determine its volume at 27°C and a pressure at 75cm of mercury.", options: ["1200cm3", "1378cm3", "4320cm3", "4629cm3"], answer: "1200cm3" },
+            { q: "A beam of light is incident from air to water at an angle of 30°. Find the angle of refraction if the refractive index of water is 4/3.", options: ["15°", "18°", "22°", "240°"], answer: "22°" },
+            { q: "The wavelength of signal from a radio transmitter is 1500m and the frequency is 200KHz. What is the velocity of the propagation?", options: ["3 ×108ms-2", "7 ×103ms-2", "3 ×104ms-2", "7ms-2"], answer: "3 ×108ms-2" },
+            { q: "Find the frequencies of the first three harmonics of a piano string of length 1.5m, if the velocity of the string is 120m/s.", options: ["40Hz, 80Hz, 120Hz", "180Hz, 360Hz, 540Hz", "80Hz, 160Hz, 240Hz", "360Hz, 180Hz, 90Hz"], answer: "40Hz, 80Hz, 120Hz" },
+            { q: "The resistance of a piece of wire of length 20 cm and cross-sectional area 8 x 105 m2 and resistivity 4 x 10-7 Ωm is", options: ["1.0 Ω", "10.0 Ω", "400.0 Ω", "1.0 × 10-13 Ω"], answer: "1.0 × 10-13 Ω" },
+            { q: "An electric device is rated 2000W, 250V. The correct fuse rating of the device is", options: ["7A", "9A", "6A", "8A"], answer: "8A" },
+            { q: "Determine the inductive reactance when a 30.0mH inductor with negligible resistance is connected to a 1.3KHz oscillator", options: ["39.0Ω", "122.5Ω", "245.0Ω", "39KΩ"], answer: "245.0Ω" },
+            { q: "The half-life of a radioactive element is 9days. Calculate the fraction that remains after 36days.", options: ["1/32", "1/16", "1/4", "15/32"], answer: "1/16" },
+            { q: "The energy stored in an inductor of inductance 5mH when a current of 6A flows through it is", options: ["9.0 x 10-3 J", "9.0 x 10-2J", "1.4 x 10-2 J", "1.8 x 10-2 J"], answer: "9.0 x 10-2J" },
+            { q: "An electric heater with a pd of 240V connected across its terminals has a total resistance of 960Ω. Calculate power range of the heater", options: ["0.25 W", "4.00 W", "38.40 W", "60.00 W"], answer: "60.00 W" },
+            { q: "The time it will take a certain radioactive material with a half-life of 50 to reduce to of its original number is", options: ["250 days", "150 days", "300 days", "200 days"], answer: "250 days"},
+            { q: "The unit of moment of a couple can be expressed in", options: ["Nm-1", "Nm-2", "Nm2", "Nm"], answer: "Nm" },
+            { q: "The resultant of two forces 12N and 5N is 13N. What is the angle between the two forces?", options: ["0°", "45°", "90°", "180°"], answer: "90°" },
+            { q: "A body of mass 12Kg traveling at 4.2ms-1 collides with another body of mass 18Kg at rest. Calculate their common velocity if the two bodies coalesce after collision.", options: ["1.5ms-1", "1.4ms-1", "2.1ms-1", "1.7ms-1"], answer: "1.7ms-1" },
+            { q: "When the vapour of a substance is in equilibrium with its own liquid, it is said to be", options: ["gaseous", "liquified", "diffused", "saturated"], answer: "saturated" },
+            { q: "If the pressure of 100cm3 of an ideal gas is doubled while its Kelvin temperature is halved, then the new volume of the gas is", options: ["25cm3", "50cm3", "100cm3", "200cm3"], answer: "25cm3" },
+            { q: "The eye controls the amount of light reaching the retina by adjusting the", options: ["cornea", "iris", "retina", "optic nerve"], answer: "iris" },
+            { q: "Transverse waves can be distinguished from longitudinal waves using the characteristics of", options: ["diffraction", "refraction", "polarization", "reflection"], answer: "polarization" },
+        ];
+        
+        function toggleDarkMode() {
+            document.body.classList.toggle("dark-mode");
+        }
+        
+        function startExam() {
+            timeLeft = parseInt(document.getElementById("timeInput").value) * 60;
+            document.getElementById("quizForm").style.display = "block";
+            document.getElementById("timeInput").style.display = "none";
+            document.querySelector("button[onclick='startExam()']").style.display = "none";
+            updateTimer();
+            timerInterval = setInterval(updateTimer, 1000);
+            loadQuestions();
+        }
+        
+        function updateTimer() {
+            let minutes = Math.floor(timeLeft / 60);
+            let seconds = timeLeft % 60;
+            document.getElementById("timer").textContent = `Time Left: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                checkAnswers();
+            }
+            timeLeft--;
+        }
+        
+        function loadQuestions() {
+            const questionContainer = document.getElementById("questions");
+            questionContainer.innerHTML = "";
+            questions.forEach((question, index) => {
+                let optionsHtml = question.options.map(option => 
+                    `<input type='radio' name='q${index}' value='${option}'> ${option}<br>`
+                ).join('');
+                questionContainer.innerHTML += `<div class='question'><p>${index + 1}. ${question.q}</p>${optionsHtml}</div>`;
+            });
+        }
+        
+        function checkAnswers() {
+            clearInterval(timerInterval);
+            let score = 0;
+            let reviewContent = "";
+            questions.forEach((question, index) => {
+                let selectedOption = document.querySelector(`input[name='q${index}']:checked`);
+                if (selectedOption) {
+                    if (selectedOption.value === question.answer) {
+                        score++;
+                    }
+                }
+                reviewContent += `<p><strong>${index + 1}. ${question.q}</strong><br>Correct Answer: ${question.answer}<br><em>Explanation: ${question.explanation}</em></p>`;
+            });
+            document.getElementById("result").textContent = `You scored ${score} out of ${questions.length}`;
+            document.getElementById("reviewContent").innerHTML = reviewContent;
+            document.getElementById("reviewSection").style.display = "block";
+            updateLeaderboard(score);
+        }
+        
+        function updateLeaderboard(score) {
+            leaderboard.push(score);
+            leaderboard.sort((a, b) => b - a);
+            localStorage.setItem("leaderboard", JSON.stringify(leaderboard.slice(0, 5)));
+            document.getElementById("leaderboard").innerHTML = leaderboard.map(s => `<li>${s}</li>`).join('');
+        }
+    </script>
+</body>
+</html>

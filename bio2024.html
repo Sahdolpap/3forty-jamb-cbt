@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>biology2024</title>
+        <link href="3forty.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h2>BIOLOGY2024</h2>
+        <button onclick="toggleDarkMode()">Toggle Dark Mode</button>
+        <br>
+        <label for="timeInput">Set Time (minutes):</label>
+        <input type="number" id="timeInput" min="1" max="120" value="10">
+        <button onclick="startExam()">Start Exam</button>
+        <p class="timer" id="timer"></p>
+        <div class="progress-bar"><div class="progress" id="progress"></div></div>
+        <form id="quizForm" style="display:none;">
+            <div id="questions"></div>
+            <button type="button" onclick="checkAnswers()">Submit</button>
+        </form>
+        <p class="result" id="result"></p>
+        <h3>Leaderboard</h3>
+        <ul id="leaderboard"></ul>
+        <div id="reviewSection">
+            <h3>Review Answers</h3>
+            <div id="reviewContent"></div>
+        </div>
+    </div>
+
+    <script>
+
+ let timerInterval;
+        let timeLeft;
+        let correctSound = new Audio('https://www.fesliyanstudios.com/play-mp3/4386');
+        let incorrectSound = new Audio('https://www.fesliyanstudios.com/play-mp3/4387');
+        let leaderboard = JSON.parse(localStorage.getItem("leaderboard")) || [];
+        const questions = [
+            { q: "From the following list of types of mutation, identify the one that is hereditary", options: ["genetic mutation", "somatic mutation", "germinal mutation", "gametic mutation"], answer: "germinal mutation", explanation: "working on it" },
+            { q: "Which of these would not be a limiting factor in photosynthesis?", options: ["O2", "CO2", "chlorophyll", "light"], answer: "O2", explanation: "wprking on it" },
+            { q: "In a cell digestive enzymes mostly occur in", options: ["ribosome", "lysosome", "mitochondria", "plastids"], answer: "checked into" },
+            { q: "Which of these is not a lipid?", options: ["wax", "sterol", "glycerol", "lecithin"], answer: "glycerol" },
+            { q: "Phototropism is", options: ["a unilateral response to light", "a bilateral response to light", "both unilateral and bilateral response to light", "a hormonal gradient created within the organ"], answer: "a unilateral response to light" },
+            { q: "IThe site of protein synthesis in a cell is", options: ["golgi apparatus", "ribosomes", "lysosomes", "nucleus"], answer: "apparatus" },
+            { q: "On storage, the sweetness of corn is lost. This is because", options: ["polysaccharide is reconverted into soluble sugar", "concentration of sugar increases due to storage", "of conversion of sugar to polysaccharide", "enzymes responsible for the conversion are lost"], answer: "of conversion of sugar to polysaccharide" },
+            { q: "The eye worm is known as", options: ["Wuchereiria bancrofti", "Brugia malayi", "Loa loa", "Dracunenlus medinensis"], answer: "Loa loa" },
+            { q: "Which of these plants is not a pitcher plant?", options: ["nepenthes", "crotalaria", " sarracenia", "dionaea"], answer: "crotalaria" },
+            { q: "One of these arthropod is a carrier of viruses and other micro organism", options: ["termite", "ant", "bee", "flea"], answer: "flea" },
+            { q: "The highly developed cortex of the brain of man enables us to do the following except", options: ["think", "reason out", "memorize", "maintain balance of the body"], answer: "maintain balance of the body" },
+            { q: "Lampbrush chromosome occurs in", options: ["salivary gland", "lymph glands", "cancer cell", "oocytes"], answer: "oocytes" },
+            { q: "Insulin is secreted by the", options: ["gall bladder", "pancreas", "liver", "spleen"], answer: "pancreas" },
+            { q: " The principal energy storing molecule is", options: ["NADP", "FAD", "ATP", "ADP"], answer: "ATP" },
+            { q: "Each month the uterus lining thickens up in readiness to receive the fertilized egg. If the egg is not fertilized, the lining and some blood is lost through the vagina. This is", options: ["ovulation", "gestation", "fertilization", "menstruation"], answer: "menstruation" },
+            { q: "In the adult mammalian blood, the cell which lack nuclei are the", options: ["erythrocytes", "lymphocytes", "leucocytes", "phagocytes"], answer: "erythrocytes" },
+            { q: "In which of the following groups of plant fruits is the pericarp inseparable from the seed coat?", options: ["caryopsis", "nut", "follicle", "cypsela"], answer: "caryopsis" },
+            { q: "The part of the brain that controls body posture in mammals is", options: ["thalamus", "cerebrum", "spinal cord", "cerebellum"], answer: "cerebellum" },
+            { q: "The ability of an organism to survive in an environment successfully is known as", options: ["residence", "adaptation", "secession", "competition"], answer: "adaptation" }, 
+            { q: "One of the adaptations to life on a tree by a monkey is its possession of digits which are", options: ["long", "opposable", "extensible", "a few"], answer: "big" },
+            { q: "The bryophytes are important parts of certain food chains because they", options: ["grow in great masses", "play a role in the natural aging of lakes and ponds", "they choke up other life forms in the lakes", "they resemble green algae"], answer: "grow in great masses" },
+            { q: "In many plants, the growing tips elongate fastest and are said to be", options: ["meristematic", "apically dominant", "phototropic", "geotropic"], answer: "meristematic" },
+            { q: "Movement of water through a semi permeable membrane because the membrane moves or expands thus overcoming the resistance of hydrostatic pressure is referred to as", options: ["diffusion", "osmosis", "osmotic potential", "turgor pressure"], answer: "osmosis" },
+            { q: "When the chromosomes condense and the nucleoli and nuclear membrane disappear, the cell is said to be undergoing", options: ["metaphase", "prophase", "anaphase", "telophase"], answer: "prophase" },
+            { q: "While the metabolizing enzymes are inducible other enzymes are said to be", options: ["synthetases", "repressible", "will bind the operator", "will not bind the operator"], answer: "repressible" },
+            { q: "In which of the following organisms does a single cell perform all the functions of movement, nutrition, growth, excretion, and photosynthesis", options: ["paramecium", "euglena", "amoeba", "spirogyra"], answer: "euglena" },
+            { q: "An important abiotic factor that affects plants and animals in their habitats is", options: ["turbidity", "rainfall", "wind direction", "temperature"], answer: "temperature" },
+            { q: "Discontinuous variations is observed in a man using the following", options: ["tongue rolling", "body weight", "height", "skin colour"], answer: "tongue rolling" },
+            { q: "From the following list of types of mutation, identify the one that is hereditary", options: ["genetic mutation", "somatic mutation", "germinal mutation", "gametic mutation"], answer: "germinal mutation" },
+            { q: "A sex-linked defect that allows small cuts to bleed severely is known as", options: ["anaemia            B. ", "anorexia", "haemophilia", "haemolysis"], answer: "decorated" },
+            { q: "Which of the following parts of a cell is living?", options: ["Cell wall", "Calcium oxalate", "Food vacuole", "Mitochondria"], answer: "Mitochondria" },
+            { q: "Cells without an organized nucleus are called", options: ["Heterokaryote", "Eukaryote", "Prokaryote", "Synkaryote"], answer: "Prokaryote" },
+            { q: "The sites for energy transfer within a cell are known as", options: ["Golgi apparatus", "Parenchyma", "Mitochondria", "Nucleolus"], answer: "Mitochondria"},
+            { q: "Food and dissolved oxygen pass from the water directly into the amoeba by a process called", options: ["Transport", "Diffusion", "Fission", "Transpiration"], answer: "Diffusion" },
+            { q: "Which one of these functions is not performed by the nervous system?", options: ["Receive sensory input from internal and external environment", "Digestion", "Integration", "Response to stimuli"], answer: "Digestion" },
+
+            { q: "In man, gas exchange occurs in the", options: ["Heart", "White blood cells", "Lungs", "Kidney"], answer: "Lungs" },
+            { q: "Three chambered heart is found in", options: ["Insects", "Amphibians", "Man", "No animal"], answer: "Amphibians" },
+            { q: "A plant cell is different from an animal cell because", options: ["The nucleus is pushed to the centre", "The nucleus is small", "The cell wall is made of cellulose", "The cytoplasm fills up the entire cell space"], answer: "The cell wall is made of cellulose" },
+
+            { q: "In a transverse section of a dicot stem,", options: ["The xylem is more deeply located than the phloem", "The cambium lies between the vascular bundles and the cortex", "The epidermis is completely encircled by the cortex", "The vascular bundles are randomly distributed within the cortex"], answer: "The xylem is more deeply located than the phloem" },
+            { q: "The spongy mesophyll is a tissue found in", options: ["Animal cells", "Plant leaves", "Plant roots", "Plant stem"], answer: "Plant leaves" },
+         ];
+        
+        function toggleDarkMode() {
+            document.body.classList.toggle("dark-mode");
+        }
+        
+        function startExam() {
+            timeLeft = parseInt(document.getElementById("timeInput").value) * 60;
+            document.getElementById("quizForm").style.display = "block";
+            document.getElementById("timeInput").style.display = "none";
+            document.querySelector("button[onclick='startExam()']").style.display = "none";
+            updateTimer();
+            timerInterval = setInterval(updateTimer, 1000);
+            loadQuestions();
+        }
+        
+        function updateTimer() {
+            let minutes = Math.floor(timeLeft / 60);
+            let seconds = timeLeft % 60;
+            document.getElementById("timer").textContent = `Time Left: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                checkAnswers();
+            }
+            timeLeft--;
+        }
+        
+        function loadQuestions() {
+            const questionContainer = document.getElementById("questions");
+            questionContainer.innerHTML = "";
+            questions.forEach((question, index) => {
+                let optionsHtml = question.options.map(option => 
+                    `<input type='radio' name='q${index}' value='${option}'> ${option}<br>`
+                ).join('');
+                questionContainer.innerHTML += `<div class='question'><p>${index + 1}. ${question.q}</p>${optionsHtml}</div>`;
+            });
+        }
+        
+        function checkAnswers() {
+            clearInterval(timerInterval);
+            let score = 0;
+            let reviewContent = "";
+            questions.forEach((question, index) => {
+                let selectedOption = document.querySelector(`input[name='q${index}']:checked`);
+                if (selectedOption) {
+                    if (selectedOption.value === question.answer) {
+                        score++;
+                    }
+                }
+                reviewContent += `<p><strong>${index + 1}. ${question.q}</strong><br>Correct Answer: ${question.answer}<br><em>Explanation: ${question.explanation}</em></p>`;
+            });
+            document.getElementById("result").textContent = `You scored ${score} out of ${questions.length}`;
+            document.getElementById("reviewContent").innerHTML = reviewContent;
+            document.getElementById("reviewSection").style.display = "block";
+            updateLeaderboard(score);
+        }
+        
+        function updateLeaderboard(score) {
+            leaderboard.push(score);
+            leaderboard.sort((a, b) => b - a);
+            localStorage.setItem("leaderboard", JSON.stringify(leaderboard.slice(0, 5)));
+            document.getElementById("leaderboard").innerHTML = leaderboard.map(s => `<li>${s}</li>`).join('');
+        }
+    </script>
+</body>
+</html>

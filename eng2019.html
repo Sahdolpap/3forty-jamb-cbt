@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>english2019</title>
+        <link href="3forty.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h2>ENGLISH 2019</h2>
+        <button onclick="toggleDarkMode()">Toggle Dark Mode</button>
+        <br>
+        <label for="timeInput">Set Time (minutes):</label>
+        <input type="number" id="timeInput" min="1" max="120" value="10">
+        <button onclick="startExam()">Start Exam</button>
+        <p class="timer" id="timer"></p>
+        <div class="progress-bar"><div class="progress" id="progress"></div></div>
+        <form id="quizForm" style="display:none;">
+            <div id="questions"></div>
+            <button type="button" onclick="checkAnswers()">Submit</button>
+        </form>
+        <p class="result" id="result"></p>
+        <h3>Leaderboard</h3>
+        <ul id="leaderboard"></ul>
+        <div id="reviewSection">
+            <h3>Review Answers</h3>
+            <div id="reviewContent"></div>
+        </div>
+    </div>
+
+    <script>
+
+ let timerInterval;
+        let timeLeft;
+        let correctSound = new Audio('https://www.fesliyanstudios.com/play-mp3/4386');
+        let incorrectSound = new Audio('https://www.fesliyanstudios.com/play-mp3/4387');
+        let leaderboard = JSON.parse(localStorage.getItem("leaderboard")) || [];
+        const questions = [
+
+            { q: "What is the capital of Nigeria?", options: ["Lagos", "Abuja", "Kano", "Ibadan"], answer: "Abuja", explanation: "Abuja became Nigeria’s capital in 1991." },
+            { q: "Cosmas is a very good friend on …. I can rely.?", options: ["who", "whose", "which", "whom"], answer: "whom", explanation: " " },
+            { q: "A hotel is supposed to be a home away from home. But the one we …. was hell away from home.?", options: ["moved into", "checked", "dropped by", "checked into"], answer: "checked into" },
+            { q: "Initially, we were deceived by the beautiful surroundings and by the manager’s …. which was warm and inviting.?", options: ["reception", "intention", "conviction", "conception"], answer: "reception" },
+            { q: "After the usual …. and signing of forms, we were allowed into our rooms.?", options: ["feeling", "filing", "fill in", "filling"], answer: "fill in" },
+            { q: "I ought …. the later by now.?", options: ["to be set", "to have being sent", "to have sent", "to have to send"], answer: "to have sent" },
+            { q: "Ade’s fever was so acute that she …. an injection.?", options: ["had to have", "had to had", "must have", "ought to have"], answer: "had to have" },
+            { q: "I started  writing this test at 9.00 am. It is now 10.00 am. By 11.00 am, I …. writing it for two hours.?", options: ["will have been", "am", "shall have been", "have been"], answer: "shall have been" },
+            { q: "The car couldn’t keep pace …. the motor cycle especially in congested areas.?", options: ["along", "with", " down", "on"], answer: "with" },
+            { q: "Idris couldn’t have said a thing like that, ….?", options: ["could he?", "id he?", "can he?", "would he?"], answer: "could he?" },
+            { q: "I don’t know what to do with these children. They are always fighting ….?", options: [" themselves", "myself", "one another", "another"], answer: "another" },
+            { q: "The fishermen threw a stone into the river and this caused a ….?", options: ["sprinkle", "sparkle", "splash", "storm"], answer: "splash" },
+            { q: "The play was so interesting that the …. clapped for quite a long time at the end.?", options: ["spectators", "watchers", "congregation", "audience"], answer: "audience" },
+            { q: " The building …. because of weak structural foundation.?", options: ["tumbled", "caved", "collapsed", "succumbed"], answer: "collapsed" },
+            { q: "The magazine was …. by the government for an offensive publication.?", options: ["prescribed", "proscribed", "suspended", "persecuted"], answer: "proscribed" },
+            { q: "Many people reacted to the brutal murder of the popular musician with strong ….?", options: ["indignation", "demonstration", "accusation", "condemnation"], answer: "condemnation" },
+            { q: "The governor frowned at the …. which slowed down the implementation of policy decisions.?", options: ["bureaucracy", "opposition", "bureaucracy", "autocracy"], answer: "bureaucracy" },
+            { q: "The doctor …. the illness as typhoid fever and not malaria.?", options: ["prescribed", "discovered", "announced ", "diagnosed"], answer: "diagnosed" },
+            { q: "Since the writer did not indicate his name, the editor decided not to publish such …. article.?", options: ["discourteous", "an anonymous", "a scandalous", "libelous"], answer: "an anonymous" }, 
+            { q: "Please let me have …. salt in my soup.?", options: ["few", "a little", "a small", "a few"], answer: "a little" },
+            { q: "Don’t believe all …. he had told you.?", options: ["what", "which", "that", "there"], answer: "that" },
+            { q: "Initially, we were deceived by the beautiful surroundings and by the manager’s …. which was warm and inviting.?", options: ["reception", "intention", "conviction", "conception"], answer: "reception" },
+            { q: "Joseph purchased various articles at the big sale near the supermarket and, surprisingly enough, he …. them all before he reached home that day.?", options: ["destroyed", "bought", "lent", "sold"], answer: "sold" },
+            { q: "In this argument, Martin was my supporter even though he is often my …. in other matters.?", options: ["opponent", "ally", "opposite", "propose"], answer: "opponent" },
+            { q: "People who are normally …. often turn to be dauntless heroes in the face of real danger.?", options: ["unsteady", "colourless", "cowardly", "bashful"], answer: "cowardly" },
+            { q: "I encouraged my younger brother to take on law as a profession while I …. my sister from doing so.?", options: ["financed", "warned", "dissuaded", "persuaded"], answer: "dissuaded" },
+            { q: "It is quite customary to introduce the guest speaker but …. to insult him.?", options: ["illegal", "impolite", "unusual", "useless"], answer: "unusual" },
+            { q: "My choice of a partner would be based on character, not looks.", options: ["visibility", "feasibility", "appearance", "posture"], answer: "appearance" },
+            { q: " Mike is very winsome yet his neighbour finds it difficult to put up with him.?", options: ["stay with", "live with", "tolerate", "rely on"], answer: "tolerate" },
+            { q: "The Efik girl has just come out of the fattening room and her waist is adorned with beads.", options: ["surrounded", "decorated", "besieged", "defaced"], answer: "decorated" },
+            { q: "There are some drugs that could exacerbate a particular illness.?", options: ["heal", "ameliorate", "worsen", "lengthen"], answer: "worsen" },
+            { q: "In accordance with the practice of his religion, Raman’s body was interred the day he died.?", options: ["preserved", "sanctified", "cremated", "buried"], answer: "buried" },
+            { q: "Who is the protagonist of the novel?", options: ["Banky", "Bepo", "Mrs. Ibidun Gloss", "Mr. Ogunwale"], answer: "Bepo"},
+            { q: "What is the full name of the principal referred to as Bepo?", options: ["Bepo Adebowale", "Adewale Adebepo", "Adebayo Bepo", "Adekunle Bepo"], answer: "Adewale Adebepo" },
+            { q: "Which teacher was known for her witty remarks in the book?", options: ["Mrs. Ibidun Gloss", "Mrs. Apeh", "Mr. Audu", "Mr. Amos"], answer: "Mrs. Ibidun Gloss" },
+            { q: "Who were the two students involved in a rivalry dating back to JSS 3?", options: ["Banky and Toss", "Jide and Kemi", "Seri and Tai", "Ogba and Tosh"], answer: "Banky and Toss" },
+            { q: "Which character is deeply committed to African history and culture?", options: ["Mr. Ogunwale", "Bepo", "Jide", "Mrs. Gloss"], answer: "Bepo" },
+            { q: "What theme is central to the rivalry between Banky and Toss?", options: ["Democracy", "Social justice", "Family and politics", "Cultural diversity"], answer: "Family and politics" },
+
+            { q: "The recurring phrase “If you say education is expensive, try ignorance” reflects which theme?", options: ["Importance of hard work", "Value of education", "Leadership struggles", "Sacrifice and dedication"], answer: "Value of education" },
+            { q: "The novel explores the effects of migration under which term?", options: ["Brain Drain", "Japa Syndrome", "Wanderlust", "Exodus"], answer: "Japa Syndrome" },
+            { q: "What theme is highlighted through the depiction of the Badagry slave museum?", options: ["Liberation", "Historical memory", "African resilience", "Colonization"], answer: "Historical memory" },
+            { q: "The sacrifices made by Bepo reflect which central theme of the book?", options: ["Family loyalty", "Dedication to duty", "Political ambition", "Cultural preservation"], answer: "Dedication to duty" },
+        ];
+        
+        function toggleDarkMode() {
+            document.body.classList.toggle("dark-mode");
+        }
+        
+        function startExam() {
+            timeLeft = parseInt(document.getElementById("timeInput").value) * 60;
+            document.getElementById("quizForm").style.display = "block";
+            document.getElementById("timeInput").style.display = "none";
+            document.querySelector("button[onclick='startExam()']").style.display = "none";
+            updateTimer();
+            timerInterval = setInterval(updateTimer, 1000);
+            loadQuestions();
+        }
+        
+        function updateTimer() {
+            let minutes = Math.floor(timeLeft / 60);
+            let seconds = timeLeft % 60;
+            document.getElementById("timer").textContent = `Time Left: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                checkAnswers();
+            }
+            timeLeft--;
+        }
+        
+        function loadQuestions() {
+            const questionContainer = document.getElementById("questions");
+            questionContainer.innerHTML = "";
+            questions.forEach((question, index) => {
+                let optionsHtml = question.options.map(option => 
+                    `<input type='radio' name='q${index}' value='${option}'> ${option}<br>`
+                ).join('');
+                questionContainer.innerHTML += `<div class='question'><p>${index + 1}. ${question.q}</p>${optionsHtml}</div>`;
+            });
+        }
+        
+        function checkAnswers() {
+            clearInterval(timerInterval);
+            let score = 0;
+            let reviewContent = "";
+            questions.forEach((question, index) => {
+                let selectedOption = document.querySelector(`input[name='q${index}']:checked`);
+                if (selectedOption) {
+                    if (selectedOption.value === question.answer) {
+                        score++;
+                    }
+                }
+                reviewContent += `<p><strong>${index + 1}. ${question.q}</strong><br>Correct Answer: ${question.answer}<br><em>Explanation: ${question.explanation}</em></p>`;
+            });
+            document.getElementById("result").textContent = `You scored ${score} out of ${questions.length}`;
+            document.getElementById("reviewContent").innerHTML = reviewContent;
+            document.getElementById("reviewSection").style.display = "block";
+            updateLeaderboard(score);
+        }
+        
+        function updateLeaderboard(score) {
+            leaderboard.push(score);
+            leaderboard.sort((a, b) => b - a);
+            localStorage.setItem("leaderboard", JSON.stringify(leaderboard.slice(0, 5)));
+            document.getElementById("leaderboard").innerHTML = leaderboard.map(s => `<li>${s}</li>`).join('');
+        }
+    </script>
+</body>
+</html>

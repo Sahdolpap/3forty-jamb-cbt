@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>crk2023</title>
+        <link href="3forty.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h2>CRK2023</h2>
+        <button onclick="toggleDarkMode()">Toggle Dark Mode</button>
+        <br>
+        <label for="timeInput">Set Time (minutes):</label>
+        <input type="number" id="timeInput" min="1" max="120" value="10">
+        <button onclick="startExam()">Start Exam</button>
+        <p class="timer" id="timer"></p>
+        <div class="progress-bar"><div class="progress" id="progress"></div></div>
+        <form id="quizForm" style="display:none;">
+            <div id="questions"></div>
+            <button type="button" onclick="checkAnswers()">Submit</button>
+        </form>
+        <p class="result" id="result"></p>
+        <h3>Leaderboard</h3>
+        <ul id="leaderboard"></ul>
+        <div id="reviewSection">
+            <h3>Review Answers</h3>
+            <div id="reviewContent"></div>
+        </div>
+    </div>
+
+    <script>
+
+ let timerInterval;
+        let timeLeft;
+        let correctSound = new Audio('https://www.fesliyanstudios.com/play-mp3/4386');
+        let incorrectSound = new Audio('https://www.fesliyanstudios.com/play-mp3/4387');
+        let leaderboard = JSON.parse(localStorage.getItem("leaderboard")) || [];
+        const questions = [
+
+            1. During the rebuilding of the temple, the greatest opposition came from the
+A. people of Judah       B. Philistines
+C. people of the land   D. Ammorites
+
+2. Prophet Isaiah received his vision and call when
+A. King Uzziah was deposed
+B. King Uzziah died
+C. King Uzziah began to reign
+D. Israel was in Babylonian captivity
+
+3. “How long will you go limping on two different opinions…” The people responded to the questions above by
+A. arresting the prophet
+B. attacking the prophet
+C. refusing to speak
+D. calling on their gods
+
+4. Nebuchadnezzar called the three Hebrews to come out of the fiery furnace because
+A. the flame of fire slew those men who took them there
+B. he wanted to pardon them
+C. he was astonished to see four men loose and unhurt
+D. they had repented
+
+5. “If you are the son of God, throw yourself down from here; for it is written, ‘He will give his angels charge of you…’” According to Luke, the statement above was made by Satan during Jesus’
+A. third temptation     B. crucifixion
+C. transfiguration        D. second temptation
+
+6. “Truly, I say to you, not even in Israel have I found such faith…” The statement above by Jesus was made when he healed the
+A. leper             B. blind man
+C. demoniac     D. centurion’s servant
+
+7. The rainbow as the sign of God’s covenant with Noah implies
+A. providence      B. reconciliation
+C. mercy              D. redemption
+
+8. “I will go out as at other times and shake myself free.” When Samson made the statement above, he was not aware that
+A. the philistines were upon him
+B. he was bound with bronze fetters
+C. the Lord had left him
+D. his eyes had been gouged out
+
+
+9. Jesus pronounced woe on Chorazin and Bethsaida because they were
+A. enemies of the truth
+B. not obedient to the law
+C. not repentant of their sins
+D. against the word of God
+
+
+10. Those who do not believe in Jesus Christ are condemned already because they
+A. are stubborn
+B. have not believed
+C. worship idols
+D. have already perished
+
+Answers to CRS Question Number 1 – 10
+1.C   2.B   3.C   4.C   5.A
+6.D   7.C   8.C   9.C  10.B
+
+CRS JAMB Questions and Answers 2023 [Numbers 11 – 20]
+11. When Simon Peter saw the great shoal of fish caught he exclaimed with personal self-judgment because he was
+A. a sinful man          B. astonished
+C. amazed                 D. amenable
+
+12. Which of the following was Naaman’s god before his skin was restored? He was a worshiper of
+A. gods of Syria      B. the Lord
+C. Rimmon             D. Baal
+
+13. How many gallons of water did Jesus turn into wine during the wedding? They were
+A. 60 or 90 gallons
+B. 120 or 180 gallons
+C. 240 or 360 gallons
+D. 300 or 450 gallons
+
+14. The word of God came to John in the wilderness during the priesthood of
+A. Annas and Abilene
+B. Caiaphas and Annas
+C. Caiaphas and Philip
+D. Abilene and Caiaphas
+
+15. What was to be the reward of Israel according to Isaiah, if they were willing and obedient? They would
+A. inherit the entire land
+B. be the people of the God and God would be their father
+C. prosper and devour their enemies
+D. eat the good of the land
+
+16. “Go for he is a chosen instrument of mine to carry my name before the Gentiles and kings and sons of Israel.” These were the words of God to
+A. Hannah         B. Ananias
+C. Barnabas       D. Paul
+
+
+17. What reward will those who forgave men who sin against them receive from God?
+A. they will receive a crown of life
+B. God will forgive them of their sins
+C. they will enter into God’s kingdom
+D. Christ will also forgive them
+
+18. According to Luke, Jesus sent the seventy others on missions as
+A. labourers and reapers in the field
+B. lambs in the midst of wolves
+C. preachers of the kingdom of God
+D. messengers in the vineyard
+
+
+19. “Master, it is well that we are here; let us make three booths, one for you, and one for Moses, and one for Elijah.” According to Luke, Peter made this statement because
+A. the place was good for habitation
+B. they have no home to live in
+C. the son of man had no home of his own
+D. they were exceedingly afraid
+
+20. When Jesus sent the seventy on mission he instructed them to eat and drink …
+A. in one house only
+B. in whatever house they enter
+C. as they go about preaching
+D. whatever is given to them
+
+Answers to CRS Question Number 11 – 20
+11.B   12.C   13.B   14.B   15.D
+16.B   17.B   18.B   19.D   20.D
+
+CRS JAMB Questions and Answers 2023 [Numbers 21 – 30]
+21. The whole congregation of the people of Israel murmured against Moses and Aaron in the wilderness of
+A. Elim        B. Sinai
+C. sin          D. Marah
+
+22. Why did Saul tell the Kenites to go away from among the Amalekites so that they will not be destroyed?
+A. God did not tell him to destroy them
+B. Saul married from the Kenites tribe
+C. They showed kindness to the people of Israel
+D. The Kenites had blood covenant with Israel
+
+23. The wives of David who were taken captive by the Amalekites were
+A. Adnah and Ahiah
+B. Ahinoam and Abigail
+C. Abijah and Abiasaph
+D. Adaiah and Adalia
+
+24. Where were Achan and all the members of his family stoned and burned to death because he stole the devoted things of God? They were killed at the valley of
+A. Hebron      B. Achor
+C. Jordan       D. Jezreel
+
+25. When Nehemiah heard that the walls of Jerusalem have been broken down and the gates destroyed by fire, what did he do?
+A. wept and mourned for many days
+B. continued fasting and praying before God
+C. confessed the sins of the people of Israel
+D. blamed the people of Israel for forsaking God
+
+26. The lions in the den did not hurt Daniel because
+A. God shut the mouths of the lions
+B. Daniel was the servant of the living God
+C. God found Daniel blameless before him
+D. God sent his angels to protect Daniel
+
+27. According to Hosea, the Israelites decided to return to the Lord so that he may
+A. forgive them again
+B. defend them against their enemies
+C. heal them and bind their wounds
+D. Be their God and love them again
+
+
+28. Why did Isaiah in his vision describe the Israelites as the rebellious children of God?
+A. Israel was a sinful nation
+B. Israel worshiped other gods
+C. they were offspring of evil doers
+D. they were people laden with iniquity
+
+29. Jesus condemned the tradition of “Corban” because it
+A. was a term of abuse in Israel
+B. meant that one should not swear
+C. contradicted one’s obligation to parents
+D. puts Sabbath law above acts of kindness
+
+30. In the Sermon on the Mount, who did Jesus say will inherit the earth? He meant the
+A. peacemakers   B. merciful
+C. meek               D. pure in heart
+
+
+Answers to CRS Question Number 21 – 30
+21.C   22.C   23.B   24.B   25.A
+26.A   27.C   28.B   29.C   30.C
+
+CRS JAMB Questions and Answers 2023 [Numbers 31 – 40]
+31. Jesus is the door and the good shepherd of the sheep because
+A. He has the power to lay down his life
+B. He has the power to take it again
+C. No one can take the power from him
+D. He received the charge from God
+
+32. What did Jesus say will happen to any tree that is unproductive? God will
+A. cut it down
+B. prune the tree
+C. take the tree away
+D. make it bear more fruits
+
+33. Why did Ananias die for the donation of the sale of his property to the Apostles?
+A. He lied to the Holy Spirit
+B. He contrived evil in his heart
+C. He lied to God not to man
+D. He kept back the proceed of the land
+
+34. Who was known as the man of power of God and was called the Great in Samaria. It was
+A. Simon      B. Philip
+C. Peter        D. John
+
+35. Who did Peter say was in the gall of bitterness and in the bond of iniquity? He said it to
+A. Saul        B. Simon
+C. Philip      D. Agabus
+
+36. Jesus earnestly decided to eat the Passover with his disciples because he
+A. knew he was going to die soon
+B. wanted to inform them about his betrayal
+C. wanted to eat it with them before he dies
+D. wanted to have the last meal with them before he dies
+
+
+37. According to Luke’s gospel, Herod was very happy to see Jesus, Why? He was glad to see him because
+A. he had long desired to see him
+B. he was hoping to see some miracles
+C. Jesus belonged to his jurisdiction
+D. he had heard much about him
+
+38. Peter and John were arrested by the priest and the captain of the temple and the Sadducees because they
+A. healed the crippled on the Sabbath
+B. were teaching the people about Christ
+C. were teaching and proclaiming the resurrection
+D. were uneducated common men with power
+
+39. God decided to punish Ahab for what he did because Ahab
+A. did evil in the sight of God
+B. made Israel sin before God
+C. provoked the Almighty God
+D. killed Naboth before man and God
+
+40. The workmen who were repairing the house of the Lord were not required to give an account of how they spent the money given to them because they
+A. were unaccountable
+B. were prudent in spending
+C. are honest in their dealings
+D. kept honest account daily
+
+Answers to CRS Question Number 31 – 40
+31.D   32.C   33.C   34.A   35.B
+36.A   37.A   38.C   39.D   40.C
+            { q: "What is the capital of Nigeria?", options: ["Lagos", "Abuja", "Kano", "Ibadan"], answer: "Abuja", explanation: "Abuja became Nigeria’s capital in 1991." },
+            { q: "Cosmas is a very good friend on …. I can rely.?", options: ["who", "whose", "which", "whom"], answer: "whom", explanation: " " },
+            { q: "A hotel is supposed to be a home away from home. But the one we …. was hell away from home.?", options: ["moved into", "checked", "dropped by", "checked into"], answer: "checked into" },
+            { q: "Initially, we were deceived by the beautiful surroundings and by the manager’s …. which was warm and inviting.?", options: ["reception", "intention", "conviction", "conception"], answer: "reception" },
+            { q: "After the usual …. and signing of forms, we were allowed into our rooms.?", options: ["feeling", "filing", "fill in", "filling"], answer: "fill in" },
+            { q: "I ought …. the later by now.?", options: ["to be set", "to have being sent", "to have sent", "to have to send"], answer: "to have sent" },
+            { q: "Ade’s fever was so acute that she …. an injection.?", options: ["had to have", "had to had", "must have", "ought to have"], answer: "had to have" },
+            { q: "I started  writing this test at 9.00 am. It is now 10.00 am. By 11.00 am, I …. writing it for two hours.?", options: ["will have been", "am", "shall have been", "have been"], answer: "shall have been" },
+            { q: "The car couldn’t keep pace …. the motor cycle especially in congested areas.?", options: ["along", "with", " down", "on"], answer: "with" },
+            { q: "Idris couldn’t have said a thing like that, ….?", options: ["could he?", "id he?", "can he?", "would he?"], answer: "could he?" },
+            { q: "I don’t know what to do with these children. They are always fighting ….?", options: [" themselves", "myself", "one another", "another"], answer: "another" },
+            { q: "The fishermen threw a stone into the river and this caused a ….?", options: ["sprinkle", "sparkle", "splash", "storm"], answer: "splash" },
+            { q: "The play was so interesting that the …. clapped for quite a long time at the end.?", options: ["spectators", "watchers", "congregation", "audience"], answer: "audience" },
+            { q: " The building …. because of weak structural foundation.?", options: ["tumbled", "caved", "collapsed", "succumbed"], answer: "collapsed" },
+            { q: "The magazine was …. by the government for an offensive publication.?", options: ["prescribed", "proscribed", "suspended", "persecuted"], answer: "proscribed" },
+            { q: "Many people reacted to the brutal murder of the popular musician with strong ….?", options: ["indignation", "demonstration", "accusation", "condemnation"], answer: "condemnation" },
+            { q: "The governor frowned at the …. which slowed down the implementation of policy decisions.?", options: ["bureaucracy", "opposition", "bureaucracy", "autocracy"], answer: "bureaucracy" },
+            { q: "The doctor …. the illness as typhoid fever and not malaria.?", options: ["prescribed", "discovered", "announced ", "diagnosed"], answer: "diagnosed" },
+            { q: "Since the writer did not indicate his name, the editor decided not to publish such …. article.?", options: ["discourteous", "an anonymous", "a scandalous", "libelous"], answer: "an anonymous" }, 
+            { q: "Please let me have …. salt in my soup.?", options: ["few", "a little", "a small", "a few"], answer: "a little" },
+            { q: "Don’t believe all …. he had told you.?", options: ["what", "which", "that", "there"], answer: "that" },
+            { q: "Initially, we were deceived by the beautiful surroundings and by the manager’s …. which was warm and inviting.?", options: ["reception", "intention", "conviction", "conception"], answer: "reception" },
+            { q: "Joseph purchased various articles at the big sale near the supermarket and, surprisingly enough, he …. them all before he reached home that day.?", options: ["destroyed", "bought", "lent", "sold"], answer: "sold" },
+            { q: "In this argument, Martin was my supporter even though he is often my …. in other matters.?", options: ["opponent", "ally", "opposite", "propose"], answer: "opponent" },
+            { q: "People who are normally …. often turn to be dauntless heroes in the face of real danger.?", options: ["unsteady", "colourless", "cowardly", "bashful"], answer: "cowardly" },
+            { q: "I encouraged my younger brother to take on law as a profession while I …. my sister from doing so.?", options: ["financed", "warned", "dissuaded", "persuaded"], answer: "dissuaded" },
+            { q: "It is quite customary to introduce the guest speaker but …. to insult him.?", options: ["illegal", "impolite", "unusual", "useless"], answer: "unusual" },
+            { q: "My choice of a partner would be based on character, not looks.", options: ["visibility", "feasibility", "appearance", "posture"], answer: "appearance" },
+            { q: " Mike is very winsome yet his neighbour finds it difficult to put up with him.?", options: ["stay with", "live with", "tolerate", "rely on"], answer: "tolerate" },
+            { q: "The Efik girl has just come out of the fattening room and her waist is adorned with beads.", options: ["surrounded", "decorated", "besieged", "defaced"], answer: "decorated" },
+            { q: "There are some drugs that could exacerbate a particular illness.?", options: ["heal", "ameliorate", "worsen", "lengthen"], answer: "worsen" },
+            { q: "In accordance with the practice of his religion, Raman’s body was interred the day he died.?", options: ["preserved", "sanctified", "cremated", "buried"], answer: "buried" },
+            { q: "Who is the protagonist of the novel?", options: ["Banky", "Bepo", "Mrs. Ibidun Gloss", "Mr. Ogunwale"], answer: "Bepo"},
+            { q: "What is the full name of the principal referred to as Bepo?", options: ["Bepo Adebowale", "Adewale Adebepo", "Adebayo Bepo", "Adekunle Bepo"], answer: "Adewale Adebepo" },
+            { q: "Which teacher was known for her witty remarks in the book?", options: ["Mrs. Ibidun Gloss", "Mrs. Apeh", "Mr. Audu", "Mr. Amos"], answer: "Mrs. Ibidun Gloss" },
+            { q: "Who were the two students involved in a rivalry dating back to JSS 3?", options: ["Banky and Toss", "Jide and Kemi", "Seri and Tai", "Ogba and Tosh"], answer: "Banky and Toss" },
+            { q: "Which character is deeply committed to African history and culture?", options: ["Mr. Ogunwale", "Bepo", "Jide", "Mrs. Gloss"], answer: "Bepo" },
+            { q: "What theme is central to the rivalry between Banky and Toss?", options: ["Democracy", "Social justice", "Family and politics", "Cultural diversity"], answer: "Family and politics" },
+
+            { q: "The recurring phrase “If you say education is expensive, try ignorance” reflects which theme?", options: ["Importance of hard work", "Value of education", "Leadership struggles", "Sacrifice and dedication"], answer: "Value of education" },
+            { q: "The novel explores the effects of migration under which term?", options: ["Brain Drain", "Japa Syndrome", "Wanderlust", "Exodus"], answer: "Japa Syndrome" },
+            { q: "What theme is highlighted through the depiction of the Badagry slave museum?", options: ["Liberation", "Historical memory", "African resilience", "Colonization"], answer: "Historical memory" },
+            { q: "The sacrifices made by Bepo reflect which central theme of the book?", options: ["Family loyalty", "Dedication to duty", "Political ambition", "Cultural preservation"], answer: "Dedication to duty" },
+        ];
+        
+        function toggleDarkMode() {
+            document.body.classList.toggle("dark-mode");
+        }
+        
+        function startExam() {
+            timeLeft = parseInt(document.getElementById("timeInput").value) * 60;
+            document.getElementById("quizForm").style.display = "block";
+            document.getElementById("timeInput").style.display = "none";
+            document.querySelector("button[onclick='startExam()']").style.display = "none";
+            updateTimer();
+            timerInterval = setInterval(updateTimer, 1000);
+            loadQuestions();
+        }
+        
+        function updateTimer() {
+            let minutes = Math.floor(timeLeft / 60);
+            let seconds = timeLeft % 60;
+            document.getElementById("timer").textContent = `Time Left: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                checkAnswers();
+            }
+            timeLeft--;
+        }
+        
+        function loadQuestions() {
+            const questionContainer = document.getElementById("questions");
+            questionContainer.innerHTML = "";
+            questions.forEach((question, index) => {
+                let optionsHtml = question.options.map(option => 
+                    `<input type='radio' name='q${index}' value='${option}'> ${option}<br>`
+                ).join('');
+                questionContainer.innerHTML += `<div class='question'><p>${index + 1}. ${question.q}</p>${optionsHtml}</div>`;
+            });
+        }
+        
+        function checkAnswers() {
+            clearInterval(timerInterval);
+            let score = 0;
+            let reviewContent = "";
+            questions.forEach((question, index) => {
+                let selectedOption = document.querySelector(`input[name='q${index}']:checked`);
+                if (selectedOption) {
+                    if (selectedOption.value === question.answer) {
+                        score++;
+                    }
+                }
+                reviewContent += `<p><strong>${index + 1}. ${question.q}</strong><br>Correct Answer: ${question.answer}<br><em>Explanation: ${question.explanation}</em></p>`;
+            });
+            document.getElementById("result").textContent = `You scored ${score} out of ${questions.length}`;
+            document.getElementById("reviewContent").innerHTML = reviewContent;
+            document.getElementById("reviewSection").style.display = "block";
+            updateLeaderboard(score);
+        }
+        
+        function updateLeaderboard(score) {
+            leaderboard.push(score);
+            leaderboard.sort((a, b) => b - a);
+            localStorage.setItem("leaderboard", JSON.stringify(leaderboard.slice(0, 5)));
+            document.getElementById("leaderboard").innerHTML = leaderboard.map(s => `<li>${s}</li>`).join('');
+        }
+    </script>
+</body>
+</html>

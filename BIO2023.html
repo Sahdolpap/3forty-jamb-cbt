@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>biology2023</title>
+        <link href="3forty.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h2>BIOLOGY2023</h2>
+        <button onclick="toggleDarkMode()">Toggle Dark Mode</button>
+        <br>
+        <label for="timeInput">Set Time (minutes):</label>
+        <input type="number" id="timeInput" min="1" max="120" value="10">
+        <button onclick="startExam()">Start Exam</button>
+        <p class="timer" id="timer"></p>
+        <div class="progress-bar"><div class="progress" id="progress"></div></div>
+        <form id="quizForm" style="display:none;">
+            <div id="questions"></div>
+            <button type="button" onclick="checkAnswers()">Submit</button>
+        </form>
+        <p class="result" id="result"></p>
+        <h3>Leaderboard</h3>
+        <ul id="leaderboard"></ul>
+        <div id="reviewSection">
+            <h3>Review Answers</h3>
+            <div id="reviewContent"></div>
+        </div>
+    </div>
+
+    <script>
+
+ let timerInterval;
+        let timeLeft;
+        let correctSound = new Audio('https://www.fesliyanstudios.com/play-mp3/4386');
+        let incorrectSound = new Audio('https://www.fesliyanstudios.com/play-mp3/4387');
+        let leaderboard = JSON.parse(localStorage.getItem("leaderboard")) || [];
+        const questions = [
+            { q: "The difference between the cell wall of a plant cell and animal cell is that", options: ["plant cell wall contains silica", "animal cell contains stomata in its membrane", "plant cell is made up of membranes only", "plant cell wall contains cellulose"], answer: "plant cell wall contains cellulose", explanation: "working on it." },
+            { q: "In mammals, digestion of starch starts in the", options: ["stomach", "small intestine", "mouth", "liver"], answer: "mouth", explanation: "working on it" },
+            { q: "In the process of pollination of a flowering plant, the pollen grain must touch this structure to start off.", options: ["petals", "calyx", "ovary", "stigma"], answer: "stigma" },
+            { q: "All birds have", options: ["two-chambered heart", "three-chambered heart", "four-chambered heart", "one-chambered heart"], answer: "four-chambered heart" },
+            { q: "The list of important types of supporting tissues in plant does not include", options: ["collenchyma", "cambium", "sclerenchyma", "xylem"], answer: "sclerenchyma" },
+            { q: "Bones of birds are modified for flight by", options: ["being long", "being cartilaginous", "containing air spaces", "being filled with marrow"], answer: "containing air spaces" },
+            { q: "The waste product of plant like glycosides, tannins, alkaloids and plant oils may be stored in the", options: ["xylem", "cell vacuoles and cell wall of leaves", "roots, stem tissues and bark", "pith, stomata and root hairs"], answer: "cell vacuoles and cell wall of leaves" },
+            { q: "The part of the alimentary system of bird where grinding of maize occurs is", options: ["crop", "gizzard", "cloak", "rectum"], answer: "gizzard" },
+            { q: "To study the structure of mammalian kidney in a secondary school you need", options: ["to get fresh kidney of a sheep or a pig", "to get a fresh kidney of a man", " to get a fresh kidney of a chick", "to get a fresh kidney of a toad"], answer: "with" },
+            { q: "The following are some examples of food chain in the savanna terrestrial ecosystem except", options: ["grass→zebra→lion", "diatoms→crayfish→bony fish", "seeds→weaverbird→civets", "leaves→elephant→vulture"], answer: "diatoms→crayfish→bony fish" },
+            { q: "The mitochondrion consists of", options: ["chemicals that break up complex compounds in the cells into simpler compounds", "rich store of ribonucleic acid", "digestive enzymes and hormones", "protein phosphorus and fats"], answer: "chemicals that break up complex compounds in the cells into simpler compounds" },
+            { q: "In amoeba, the ectoplasm is bounded by a thin membrane known as the", options: ["plasmasol", "plasmagel", "plasmalemma", "protoplasm"], answer: "plasmalemma" },
+            { q: "Centipedes are", options: ["equally dangerous as millipedes", "less dangerous than millipedes", "more dangerous than all", "not dangerous at all"], answer: "more dangerous than all" },
+            { q: "Odontophore is a skeletal structure in the phylum of", options: ["pisces", "echinoderms", "mollusca", "amphibians"], answer: "mollusca" },
+            { q: "Wattle is a name of a structure found in", options: ["lizard", "chameleon", "cock", "dogfish"], answer: "cock" },
+            { q: "One of these is not a feature of the caudal vertebrae in mammal", options: ["they possess neural canal", "their transverse process are poorly developed", "their neural spines are gradually lost", "there are not many articular surfaces"], answer: "they possess neural canal" },
+            { q: "The inner ear has two types of coiled structure called cochlea which", options: ["receives sound impulses", "has sensory cell which carry impulses to the spinal cord", "connects to the eusta chain tube", "possess cells sensitive to balance"], answer: "receives sound impulses" },
+            { q: "The viruses are the smallest known organisms and are divided into two parts; the outer part and the inner part. The outer part is protein and the inner part is", options: ["nucleus", "vacuole", "particle", "DNA and RNA"], answer: "DNA and RNA" },
+            { q: "The thallus of a lichen consists of", options: ["a virus and a fungus", "algae cells and fungal hyphae", "bacterial and fungal cells", "soredium and basisiopot"], answer: "algae cells and fungal hyphae" }, 
+            { q: "The palisade parenchyma is found in the", options: ["steam", "leaf", "flower", "root"], answer: "leaf" },
+            { q: "Increasing complexity due to multicellularity first appeared in this animal group", options: ["protozoa", "coelentrata", "sarcodina", "protista"], answer: "coelentrata" },
+            { q: "In the angiosperms, the sieve tube members are living non-nucleated, but they are usually accompanied by", options: ["cork cambium", "phloem rays", "vascular cambium", "companion cells"], answer: "companion cells" },
+            { q: "Abscisic acid is a chemical that prepares plants for", options: ["ripening fruits", "emergence of seedlings", "for leaf fall", "reproduction"], answer: "for leaf fall" },
+            { q: "The formula below represents C6H12O6 → 2C2H6O + 2CO2 + ATP", options: ["glycolysis", "fermentation", "photosynthesis", "respiration"], answer: "fermentation" },
+            { q: "In any population, any specific allele will mutate at one time or another, usually to a non functional or harmful form. The proportion of gametes carrying new mutant alleles of a given locus is called", options: ["the mutation rate", "the selection coefficient", "the relative fitness", "the lethal genotype"], answer: "the mutation rate" },
+            { q: "In mosses, the sporophyte generation is highly prominent producing spores in a cone-like", options: ["gametophyte", "strobilus", "Antheridium", "archegonium"], answer: "archegonium" },
+            { q: "When Sudan 111 solution is boiled with a solution of food substances, it gives a colour black precipitate showing the presence of", options: ["fats and oil", "protein", "amino acid", "starch"], answer: "fats and oil" },
+            { q: "Plants adapted to life in salty marsh are known as", options: ["hydrophytes", "xerophytes", "halophytes", "epiphytes"], answer: "halophytes" },
+            { q: "A circulatory system that does not allow mixing of oxygenated blood in the mammalian heart is referred to as", options: ["open", "double", "single", "closed"], answer: "double" },
+            { q: "In a pyramid of numbers, it is common to have …… with the smallest of individuals", options: ["secondary consumers", "tertiary consumers", "primary consumers", "primary producers"], answer: "tertiary consumers" },
+          { q: "From the following list of types of mutation, identify the one that is hereditary", options: ["genetic mutation", "somatic mutation", "germinal mutation", "gametic mutation"], answer: "germinal mutation" },
+            { q: "Which of these would not be a limiting factor in photosynthesis?", options: ["O2", "CO2", "chlorophyll", "light"], answer: "O2" },
+            { q: "In a cell digestive enzymes mostly occur in", options: ["ribosome", "lysosome", ". mitochondria", "plastids"], answer: "lysosome"},
+            { q: "Which of these is not a lipid?", options: ["wax", "sterol", "glycerol", "lecithin"], answer: "glycerol" },
+            { q: "Phototropism is", options: ["a unilateral response to light", "a bilateral response to light", "both unilateral and bilateral response to light", "a hormonal gradient created within the organ"], answer: "a unilateral response to light" },
+            { q: "The site of protein synthesis in a cell is", options: ["golgi apparatus", "ribosomes", "lysosomes", "nucleus"], answer: "ribosomes" },
+            { q: "On storage, the sweetness of corn is lost. This is because", options: ["polysaccharide is reconverted into soluble sugar", "concentration of sugar increases due to storage", "of conversion of sugar to polysaccharide", "enzymes responsible for the conversion are lost"], answer: "of conversion of sugar to polysaccharide" },
+            { q: " The eye worm is known as", options: ["Wuchereiria bancrofti", "Brugia malayi", "Loa loa", "Dracunenlus medinensis"], answer: "Loa loa" },
+            { q: "Which of these plants is not a pitcher plant?", options: ["nepenthes", "crotalaria", "sarracenia", "dionaea"], answer: "Value of education" },
+            { q: "One of these arthropod is a carrier of viruses and other micro organism", options: ["termite", "ant", "bee", "flea"], answer: "flea" },
+        ];
+        
+        function toggleDarkMode() {
+            document.body.classList.toggle("dark-mode");
+        }
+        
+        function startExam() {
+            timeLeft = parseInt(document.getElementById("timeInput").value) * 60;
+            document.getElementById("quizForm").style.display = "block";
+            document.getElementById("timeInput").style.display = "none";
+            document.querySelector("button[onclick='startExam()']").style.display = "none";
+            updateTimer();
+            timerInterval = setInterval(updateTimer, 1000);
+            loadQuestions();
+        }
+        
+        function updateTimer() {
+            let minutes = Math.floor(timeLeft / 60);
+            let seconds = timeLeft % 60;
+            document.getElementById("timer").textContent = `Time Left: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                checkAnswers();
+            }
+            timeLeft--;
+        }
+        
+        function loadQuestions() {
+            const questionContainer = document.getElementById("questions");
+            questionContainer.innerHTML = "";
+            questions.forEach((question, index) => {
+                let optionsHtml = question.options.map(option => 
+                    `<input type='radio' name='q${index}' value='${option}'> ${option}<br>`
+                ).join('');
+                questionContainer.innerHTML += `<div class='question'><p>${index + 1}. ${question.q}</p>${optionsHtml}</div>`;
+            });
+        }
+        
+        function checkAnswers() {
+            clearInterval(timerInterval);
+            let score = 0;
+            let reviewContent = "";
+            questions.forEach((question, index) => {
+                let selectedOption = document.querySelector(`input[name='q${index}']:checked`);
+                if (selectedOption) {
+                    if (selectedOption.value === question.answer) {
+                        score++;
+                    }
+                }
+                reviewContent += `<p><strong>${index + 1}. ${question.q}</strong><br>Correct Answer: ${question.answer}<br><em>Explanation: ${question.explanation}</em></p>`;
+            });
+            document.getElementById("result").textContent = `You scored ${score} out of ${questions.length}`;
+            document.getElementById("reviewContent").innerHTML = reviewContent;
+            document.getElementById("reviewSection").style.display = "block";
+            updateLeaderboard(score);
+        }
+        
+        function updateLeaderboard(score) {
+            leaderboard.push(score);
+            leaderboard.sort((a, b) => b - a);
+            localStorage.setItem("leaderboard", JSON.stringify(leaderboard.slice(0, 5)));
+            document.getElementById("leaderboard").innerHTML = leaderboard.map(s => `<li>${s}</li>`).join('');
+        }
+    </script>
+</body>
+</html>

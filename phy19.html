@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>phy 2024</title>
+        <link href="3forty.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h2>PHYSIS2024</h2>
+        <button onclick="toggleDarkMode()">Toggle Dark Mode</button>
+        <br>
+        <label for="timeInput">Set Time (minutes):</label>
+        <input type="number" id="timeInput" min="1" max="120" value="10">
+        <button onclick="startExam()">Start Exam</button>
+        <p class="timer" id="timer"></p>
+        <div class="progress-bar"><div class="progress" id="progress"></div></div>
+        <form id="quizForm" style="display:none;">
+            <div id="questions"></div>
+            <button type="button" onclick="checkAnswers()">Submit</button>
+        </form>
+        <p class="result" id="result"></p>
+        <h3>Leaderboard</h3>
+        <ul id="leaderboard"></ul>
+        <div id="reviewSection">
+            <h3>Review Answers</h3>
+            <div id="reviewContent"></div>
+        </div>
+    </div>
+
+    <script>
+
+ let timerInterval;
+        let timeLeft;
+        let correctSound = new Audio('https://www.fesliyanstudios.com/play-mp3/4386');
+        let incorrectSound = new Audio('https://www.fesliyanstudios.com/play-mp3/4387');
+        let leaderboard = JSON.parse(localStorage.getItem("leaderboard")) || [];
+        const questions = [
+            { q: "The lowest note emitted by a stretched string has a frequency of 40Hz. How many overtones are there between 40Hz and 180Hz?", options: ["4", "3", "2", "1"], answer: "3", explanation: "working on it." },
+            { q: "Which of the following devices may be used to step up the voltage in a d.c circuit?", options: ["A step-up transformer", "A d.c generator", "A wattmeter", "An induction coil"], answer: "An induction coil", explanation: "working on its" },
+            { q: "The temperature gradient across a copper rod of thickness 0.02m, maintained at two temperature junctions of 20ºC and 80ºC respectively is?", options: ["3.0 x 102Km−1", "3.0 x 103Km−1", "5.0 x 103Km−1", "3.0 x 104Km−1"], answer: "3.0 x 103Km−1" },
+            { q: "Which of the following is not a vector quantity?", options: ["momentum", "force", "temperature", "displacement"], answer: "temperature" },
+            { q: "A parallel Plate capacitor of area 10cm2 in vacuum has a capacitance of 10-2µF. What is the distance between the plates? (εo = 9 x 10-12Fm)", options: ["9 x 10-13m", "9 x 10-7m", "9 x 10-3m", "9 x 107m"], answer: "9 x 10-7m" },
+            { q: "Which of the following statements about defects of vision is/are CORRECT? I. For a long sighted person, close objects appear blurred II. For a short sighted person, distant objects appear blurred III. Short sight is corrected by using a pair of converging lenses", options: ["A. I only", "II only", "I and II only", "II and III only"], answer: "I and II only" },
+            { q: "When a plane mirror at which a ray of light is incident is rotated through an angle θ, the reflected ray will be rotated through", options: ["1/2θ", "0", "20", "30"], answer: "20" },
+            { q: "An electric heater with a pd of 240V connected across its terminals has a total resistance of 960Ω. Calculate power range of the heater", options: ["0.25 W", "4.00 W", "38.40 W", "60.00 W"], answer: "60.00 W" },
+            { q: "A metal rod 800mm long is heated from 10oC to 95oC. If it expands by 1.36mm, the linear expansivity of the metal is", options: ["2.0 x 102K-1", "2.0 x 10-2K-1", "5.0 x 10-3K-1", "2.0 x 10-5K-1"], answer: "2.0 x 10-5K-1" },
+            { q: "If the pile driver has a weight of 660N and is raised 20m, then energy of stationary pile is", options: ["13200J", "134003J", "14200J", "15200J"], answer: "13200J" },
+            { q: "A column of air 10.0cm long is trapped in a tube at 27oC. What is the length of the column at 100oC?", options: [" 12.4cm", "13.7cm", "18.5cm", "37.0cm"], answer: "12.4cm" },
+            { q: "Two balls of masses 40g and 60g respectively, are attached firmly to the ends of a light metre rule. The centre of gravity of the system is", options: ["at the mid-point of the metre rule", "40cm from the lighter mass", "40cm from the heavier mass", "60cm from the heavier mass"], answer: "40cm from the heavier mass" },
+            { q: "A solid weighs 4.8g in air, 2.8g in water and 3.2g in Kerosine. The ratio of density of the solid to that of the kerosine is", options: ["2", "3/2", "2/3", "3"], answer: "3" },
+            { q: " One of the following readings represents the measurement of the length of a metal rod using vernier callipers. Taking the reading accuracy into consideration, the most likely one is", options: ["5.16cm", "5.165cm", "5.0cm", "5.160cm"], answer: "5.16cm" },
+            { q: "In Sunlight, a blue flower looks blue because we see the flower by the light it", options: ["receives from our eyes", "disperses", "absorbed", "reflects"], answer: "reflects" },
+            { q: "Which of the following electromagnetic waves has the shortest wave length?", options: ["radio waves", "x-rays", "infra-red", "blue light"], answer: "x-rays" },
+            { q: "Which of the following is a correct explanation of the inertia of a body?", options: ["Reluctance to stop moving", "Ability to overcome the earth’s gravity", "Reluctance to start moving and its reluctance to stop moving once it has begun to move", "Readiness to start moving"], answer: "Reluctance to start moving and its reluctance to stop moving once it has begun to move" },
+            { q: "Dispersion of light by a glass prism is due to the", options: ["different hidden colours of the glass", "different speeds of various colours in glass", "defect in the glass ", "high density in glass"], answer: "different speeds of various colours in glass" },
+            { q: "When an atom loses or gains a charge, it becomes", options: ["an electron", "an ion", "a neutron", "a proton"], answer: "an ion" }, 
+            { q: "To convert an ac dynamo to dc dynamo, the", options: ["number of turns of the coil is increased", "slip rings are replaced with a split-ring commutator", "number of turns of the coil is reduced", "split-ring commutator is replaced with slip rings"], answer: "slip rings are replaced with a split-ring commutator" },
+            { q: "Which of following does not cause a reduction of the surface tension of water?", options: ["Detergent", "Alcohol", "Camphor", "Grease"], answer: "Grease" },
+            { q: "A stone of mass 1kg is dropped from a height of 10m above the ground and it falls freely under gravity. Its kinetic energy 5m above the ground is then equal to", options: ["its kinetic energy on the ground", "twice its initial potential energy", "its initial potential energy", "half its initial potential energy"], answer: "half its initial potential energy" },
+            { q: "The plane mirrors in a Kaleidoscope are usually placed", options: ["at an angle of 60o", "parallel to one another", "perpendicular to one another", "at an angle of 45o"], answer: "at an angle of 60o" },
+            { q: "An object weighs 10N in air and 7N in water, what is the weight when immersed in a liquid of relative density 1.5?", options: ["4.5N", "4.6N", "5.5N", "8.5N"], answer: "5.5N" },
+            { q: "An object is placed 36cm from a converging lens of focal length 24cm. If a real image which is 4cm high is formed, calculate the height of the object.", options: ["2.0cm", "4.0cm", "6.0cm", "8.0cm"], answer: "2.0cm" },
+            { q: "In an electrolysis experiment, a cathode of mass 5g is found to weigh 5.01g after a current of 5A flows for 50 seconds. What is the electrochemical equivalent of the deposited substance?", options: ["0.00004g/C", "0.00002g/C", "0.02500g/C", "0.05000g/C"], answer: "0.00004g/C" },
+            { q: "In semi-conductors, the carriers of current at room temperature are", options: ["electrons only", "electrons and holes", "holes only", "electrons and ions"], answer: "electrons and holes" },
+            { q: "If a spherical metal of radius 3cm is fully immersed in a cylinder containing water and the water level rises by 1cm, what is the radius of the cylinder?", options: ["1 cm", "3 cm", "6 cm", "12 cm"], answer: "6 cm" },
+            { q: " A column of air 10.0cm long is trapped in a tube at 270C. What is the length of the column at 1000C?", options: ["12.4cm", "13.7cm", "18.5cm", "37.0cm"], answer: "12.4cm" },
+            { q: "Impulse has the same dimension as one of these physical quantities", options: ["energy", "momentum", "surface tension", "pressure"], answer: "momentum" },
+            { q: "A step-down transformer has a power output of 50W and efficiency of 80%. If the mains supply voltage is 200V, calculate the primary current of the transformer", options: ["0.31A", "3.20A", "3.40A", "5.00A"], answer: "0.31A" },
+            { q: "Thermionic emission is the process by which", options: ["β-rays are produced", "z-rays are produced", "α-rays are produced", "electrons leave hot elements"], answer: "electrons leave hot elementsj" },
+            { q: "When the size of the hole in a pin-hole camera is increased, the result is", options: ["a blurred imagea", "magnified image", "correction for chromatic aberration", "sharper focus of the image"], answer: "a blurred imagea"},
+            { q: "The mechanical advantage of an inclined plane depends on", options: ["its length", "its height", "the product of its height and length", "the ratio of its length to its height"], answer: "the ratio of its length to its height" },
+            { q: "Find the frequencies of the first three harmonics of a piano string of length 1.5m, if the velocity of the string is 120m/s.", options: ["40Hz, 80Hz, 120Hz", "80Hz, 160Hz, 240Hz", "180Hz, 360Hz, 540Hz", "369Hz, 180Hz, 90Hz"], answer: "40Hz, 80Hz, 120Hz" },
+            { q: "Equal masses of copper and rubber are raised to the same temperature. After sometime, the copper was observed to be at a lower temperature because", options: ["the specific heat capacity of copper is lower than that of rubber", "copper expands more than rubber", "the specific heat capacity of rubber is lower than that of copper", "rubber expands more than copper"], answer: "the specific heat capacity of copper is lower than that of rubber" },
+
+            { q: "The principle of operation of an induction coil is based on", options: ["Ohm’s law", "Ampere’s law", "Faraday’s law", "Coulomb’s law"], answer: "Faraday’s law" },
+            { q: "A coin placed below a rectangular glass block of thickness 9 cm and refractive index 1.5 is viewed vertically above the block. The apparent displacement of the coin is", options: ["8 cm", "6 cm", "5 cm", "3 cm"], answer: "8 cm" },
+
+            { q: "A transistor is used in the amplification of signals because it", options: ["allows doping", "contains electron and hole carriers", "consumes a lot of power", "controls the flow of current"], answer: "controls the flow of current" },
+            { q: "A test tube of radius 1.0cm is loaded to 8.8g. If it is placed upright in water, find the depth to which it would sink. [g = 10ms-2, density of water = 1000kgm-3] A.           B. ", options: ["2.8 cm", "5.2 cm", "25.5 cm", "28.0 cm"], answer: "2.8 cm" },
+        ];
+        
+        function toggleDarkMode() {
+            document.body.classList.toggle("dark-mode");
+        }
+        
+        function startExam() {
+            timeLeft = parseInt(document.getElementById("timeInput").value) * 60;
+            document.getElementById("quizForm").style.display = "block";
+            document.getElementById("timeInput").style.display = "none";
+            document.querySelector("button[onclick='startExam()']").style.display = "none";
+            updateTimer();
+            timerInterval = setInterval(updateTimer, 1000);
+            loadQuestions();
+        }
+        
+        function updateTimer() {
+            let minutes = Math.floor(timeLeft / 60);
+            let seconds = timeLeft % 60;
+            document.getElementById("timer").textContent = `Time Left: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                checkAnswers();
+            }
+            timeLeft--;
+        }
+        
+        function loadQuestions() {
+            const questionContainer = document.getElementById("questions");
+            questionContainer.innerHTML = "";
+            questions.forEach((question, index) => {
+                let optionsHtml = question.options.map(option => 
+                    `<input type='radio' name='q${index}' value='${option}'> ${option}<br>`
+                ).join('');
+                questionContainer.innerHTML += `<div class='question'><p>${index + 1}. ${question.q}</p>${optionsHtml}</div>`;
+            });
+        }
+        
+        function checkAnswers() {
+            clearInterval(timerInterval);
+            let score = 0;
+            let reviewContent = "";
+            questions.forEach((question, index) => {
+                let selectedOption = document.querySelector(`input[name='q${index}']:checked`);
+                if (selectedOption) {
+                    if (selectedOption.value === question.answer) {
+                        score++;
+                    }
+                }
+                reviewContent += `<p><strong>${index + 1}. ${question.q}</strong><br>Correct Answer: ${question.answer}<br><em>Explanation: ${question.explanation}</em></p>`;
+            });
+            document.getElementById("result").textContent = `You scored ${score} out of ${questions.length}`;
+            document.getElementById("reviewContent").innerHTML = reviewContent;
+            document.getElementById("reviewSection").style.display = "block";
+            updateLeaderboard(score);
+        }
+        
+        function updateLeaderboard(score) {
+            leaderboard.push(score);
+            leaderboard.sort((a, b) => b - a);
+            localStorage.setItem("leaderboard", JSON.stringify(leaderboard.slice(0, 5)));
+            document.getElementById("leaderboard").innerHTML = leaderboard.map(s => `<li>${s}</li>`).join('');
+        }
+    </script>
+</body>
+</html>
